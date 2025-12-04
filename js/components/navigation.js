@@ -5,7 +5,7 @@
 
 class NavigationManager {
     constructor() {
-        this.focusableSelector = '[data-focusable="true"], .content-card, .menu-item, .category-btn, .cast-card, .action-btn, .episode-card';
+        this.focusableSelector = '[data-focusable="true"], .content-card, .nav-item, .sidebar-category-btn, .cast-card, .action-btn, .episode-card';
         this.currentFocusedElement = null;
         this.focusHistory = [];
         this.grids = new Map();
@@ -188,7 +188,7 @@ class NavigationManager {
      * Navigate linearly (non-grid)
      */
     navigateLinear(currentElement, direction) {
-        const container = currentElement.closest('.sidebar-menu, .category-filter, .detail-actions, .control-buttons, .season-selector');
+        const container = currentElement.closest('.top-nav-menu, .sidebar-categories, .detail-actions, .control-buttons, .season-selector');
 
         if (!container) {
             // General navigation
@@ -202,7 +202,7 @@ class NavigationManager {
         if (currentIndex === -1) return;
 
         let nextIndex;
-        const isHorizontal = container.classList.contains('category-filter') ||
+        const isHorizontal = container.classList.contains('top-nav-menu') ||
             container.classList.contains('detail-actions') ||
             container.classList.contains('control-buttons') ||
             container.classList.contains('season-selector');
@@ -374,9 +374,12 @@ class NavigationManager {
      * Focus sidebar
      */
     focusSidebar() {
-        const activeMenuItem = document.querySelector('.menu-item.active');
-        if (activeMenuItem) {
-            activeMenuItem.focus();
+        const activeCategory = document.querySelector('.sidebar-category-btn.active');
+        if (activeCategory) {
+            activeCategory.focus();
+        } else {
+            const firstCategory = document.querySelector('.sidebar-category-btn');
+            if (firstCategory) firstCategory.focus();
         }
     }
 

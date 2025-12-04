@@ -129,8 +129,8 @@ class App {
      * Setup event listeners
      */
     setupEventListeners() {
-        // Sidebar menu
-        document.querySelectorAll('.menu-item').forEach(item => {
+        // Top navigation menu
+        document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 const screen = item.dataset.screen;
                 if (screen) {
@@ -156,10 +156,17 @@ class App {
     async navigateToScreen(screenName) {
         if (screenName === this.currentScreen) return;
 
-        // Update sidebar
-        document.querySelectorAll('.menu-item').forEach(item => {
+        // Update top menu
+        document.querySelectorAll('.nav-item').forEach(item => {
             item.classList.toggle('active', item.dataset.screen === screenName);
         });
+
+        // Show/hide category sidebar based on screen
+        const categorySidebar = document.getElementById('category-sidebar');
+        if (categorySidebar) {
+            const screensWithCategories = ['live', 'movies', 'series'];
+            categorySidebar.classList.toggle('hidden', !screensWithCategories.includes(screenName));
+        }
 
         // Hide current screen
         document.querySelectorAll('.screen').forEach(screen => {

@@ -36,42 +36,24 @@ class SeriesScreen {
     }
 
     /**
-     * Render categories
+     * Render categories in sidebar
      */
     renderCategories() {
-        this.categoriesContainer.innerHTML = `
-            <div class="category-nav-container">
-                <button class="category-nav-btn" id="series-cat-prev" data-focusable="true">◀</button>
-                <div class="category-scroll" id="series-cat-scroll">
-                    ${this.categories.map((cat, index) => `
-                        <button class="category-btn ${index === 0 ? 'active' : ''}" 
-                                data-category-id="${cat.originalId}"
-                                data-focusable="true">
-                            ${cat.category_name}
-                        </button>
-                    `).join('')}
-                </div>
-                <button class="category-nav-btn" id="series-cat-next" data-focusable="true">▶</button>
-            </div>
-        `;
+        const sidebarCategories = document.getElementById('sidebar-categories');
+        if (!sidebarCategories) return;
 
-        const scrollContainer = document.getElementById('series-cat-scroll');
-        const prevBtn = document.getElementById('series-cat-prev');
-        const nextBtn = document.getElementById('series-cat-next');
-
-        // Navigation button events
-        prevBtn.addEventListener('click', () => {
-            scrollContainer.scrollBy({ left: -300, behavior: 'smooth' });
-        });
-
-        nextBtn.addEventListener('click', () => {
-            scrollContainer.scrollBy({ left: 300, behavior: 'smooth' });
-        });
+        sidebarCategories.innerHTML = this.categories.map((cat, index) => `
+            <button class="sidebar-category-btn ${index === 0 ? 'active' : ''}" 
+                    data-category-id="${cat.originalId}"
+                    data-focusable="true">
+                ${cat.category_name}
+            </button>
+        `).join('');
 
         // Category button events
-        scrollContainer.querySelectorAll('.category-btn').forEach(btn => {
+        sidebarCategories.querySelectorAll('.sidebar-category-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                scrollContainer.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                sidebarCategories.querySelectorAll('.sidebar-category-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.loadCategory(btn.dataset.categoryId);
             });

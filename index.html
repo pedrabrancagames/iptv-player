@@ -38,130 +38,114 @@
 
     <!-- Main App Container -->
     <div id="app" class="app hidden">
-        <!-- Sidebar Navigation -->
-        <nav id="sidebar" class="sidebar">
-            <div class="sidebar-header">
+        <!-- Top Navigation Bar -->
+        <header class="top-nav">
+            <div class="top-nav-brand">
                 <span class="logo-icon">▶</span>
                 <span class="logo-text">IPTV</span>
             </div>
-            <ul class="sidebar-menu" id="sidebar-menu">
-                <li class="menu-item active" data-screen="home" data-focusable="true">
-                    <span class="menu-icon">🏠</span>
-                    <span class="menu-label">Início</span>
-                </li>
-                <li class="menu-item" data-screen="live" data-focusable="true">
-                    <span class="menu-icon">📺</span>
-                    <span class="menu-label">TV ao Vivo</span>
-                </li>
-                <li class="menu-item" data-screen="movies" data-focusable="true">
-                    <span class="menu-icon">🎬</span>
-                    <span class="menu-label">Filmes</span>
-                </li>
-                <li class="menu-item" data-screen="series" data-focusable="true">
-                    <span class="menu-icon">📺</span>
-                    <span class="menu-label">Séries</span>
-                </li>
-                <li class="menu-item" data-screen="search" data-focusable="true">
-                    <span class="menu-icon">🔍</span>
-                    <span class="menu-label">Buscar</span>
-                </li>
-                <li class="menu-item" data-screen="favorites" data-focusable="true">
-                    <span class="menu-icon">❤️</span>
-                    <span class="menu-label">Favoritos</span>
-                </li>
-                <li class="menu-item" data-screen="settings" data-focusable="true">
-                    <span class="menu-icon">⚙️</span>
-                    <span class="menu-label">Configurações</span>
-                </li>
-            </ul>
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <span class="connection-status connected"></span>
-                    <span class="connection-text">Conectado</span>
-                </div>
+            <nav class="top-nav-menu" id="top-menu">
+                <button class="nav-item active" data-screen="home" data-focusable="true">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-label">Início</span>
+                </button>
+                <button class="nav-item" data-screen="live" data-focusable="true">
+                    <span class="nav-icon">📺</span>
+                    <span class="nav-label">TV ao Vivo</span>
+                </button>
+                <button class="nav-item" data-screen="movies" data-focusable="true">
+                    <span class="nav-icon">🎬</span>
+                    <span class="nav-label">Filmes</span>
+                </button>
+                <button class="nav-item" data-screen="series" data-focusable="true">
+                    <span class="nav-icon">📺</span>
+                    <span class="nav-label">Séries</span>
+                </button>
+                <button class="nav-item" data-screen="search" data-focusable="true">
+                    <span class="nav-icon">🔍</span>
+                    <span class="nav-label">Buscar</span>
+                </button>
+                <button class="nav-item" data-screen="favorites" data-focusable="true">
+                    <span class="nav-icon">❤️</span>
+                    <span class="nav-label">Favoritos</span>
+                </button>
+                <button class="nav-item" data-screen="settings" data-focusable="true">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-label">Config</span>
+                </button>
+            </nav>
+            <div class="top-nav-status">
+                <span class="connection-status connected"></span>
+                <span class="top-nav-time" id="current-time"></span>
             </div>
-        </nav>
+        </header>
 
-        <!-- Main Content Area -->
-        <main id="main-content" class="main-content">
-            <!-- Home Screen -->
-            <section id="screen-home" class="screen active">
-                <div class="screen-header">
-                    <h1 class="screen-title">Início</h1>
-                    <div class="current-time" id="current-time"></div>
+        <!-- Content Wrapper (Sidebar + Main) -->
+        <div class="content-wrapper">
+            <!-- Category Sidebar -->
+            <aside id="category-sidebar" class="category-sidebar hidden">
+                <div class="sidebar-title">Categorias</div>
+                <div class="sidebar-categories" id="sidebar-categories">
+                    <!-- Categories will be loaded dynamically -->
                 </div>
-                <div class="screen-content" id="home-content">
-                    <!-- Dynamic content will be loaded here -->
-                </div>
-            </section>
+            </aside>
 
-            <!-- Live TV Screen -->
-            <section id="screen-live" class="screen">
-                <div class="screen-header">
-                    <h1 class="screen-title">TV ao Vivo</h1>
-                    <div class="category-filter" id="live-categories"></div>
-                </div>
-                <div class="screen-content">
-                    <div class="content-grid" id="live-grid"></div>
-                </div>
-            </section>
-
-            <!-- Movies Screen -->
-            <section id="screen-movies" class="screen">
-                <div class="screen-header">
-                    <h1 class="screen-title">Filmes</h1>
-                    <div class="category-filter" id="movie-categories"></div>
-                </div>
-                <div class="screen-content">
-                    <div class="content-grid" id="movies-grid"></div>
-                </div>
-            </section>
-
-            <!-- Series Screen -->
-            <section id="screen-series" class="screen">
-                <div class="screen-header">
-                    <h1 class="screen-title">Séries</h1>
-                    <div class="category-filter" id="series-categories"></div>
-                </div>
-                <div class="screen-content">
-                    <div class="content-grid" id="series-grid"></div>
-                </div>
-            </section>
-
-            <!-- Search Screen -->
-            <section id="screen-search" class="screen">
-                <div class="screen-header">
-                    <h1 class="screen-title">Buscar</h1>
-                </div>
-                <div class="screen-content">
-                    <div class="search-container">
-                        <input type="text" id="search-input" class="search-input" placeholder="Digite para buscar..."
-                            data-focusable="true">
-                        <div class="search-results" id="search-results"></div>
+            <!-- Main Content Area -->
+            <main id="main-content" class="main-content">
+                <!-- Home Screen -->
+                <section id="screen-home" class="screen active">
+                    <div class="screen-content" id="home-content">
+                        <!-- Dynamic content will be loaded here -->
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <!-- Favorites Screen -->
-            <section id="screen-favorites" class="screen">
-                <div class="screen-header">
-                    <h1 class="screen-title">Favoritos</h1>
-                </div>
-                <div class="screen-content">
-                    <div class="content-grid" id="favorites-grid"></div>
-                </div>
-            </section>
+                <!-- Live TV Screen -->
+                <section id="screen-live" class="screen">
+                    <div class="screen-content">
+                        <div class="content-grid" id="live-grid"></div>
+                    </div>
+                </section>
 
-            <!-- Settings Screen -->
-            <section id="screen-settings" class="screen">
-                <div class="screen-header">
-                    <h1 class="screen-title">Configurações</h1>
-                </div>
-                <div class="screen-content">
-                    <div class="settings-container" id="settings-container"></div>
-                </div>
-            </section>
-        </main>
+                <!-- Movies Screen -->
+                <section id="screen-movies" class="screen">
+                    <div class="screen-content">
+                        <div class="content-grid" id="movies-grid"></div>
+                    </div>
+                </section>
+
+                <!-- Series Screen -->
+                <section id="screen-series" class="screen">
+                    <div class="screen-content">
+                        <div class="content-grid" id="series-grid"></div>
+                    </div>
+                </section>
+
+                <!-- Search Screen -->
+                <section id="screen-search" class="screen">
+                    <div class="screen-content">
+                        <div class="search-container">
+                            <input type="text" id="search-input" class="search-input"
+                                placeholder="Digite para buscar..." data-focusable="true">
+                            <div class="search-results" id="search-results"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Favorites Screen -->
+                <section id="screen-favorites" class="screen">
+                    <div class="screen-content">
+                        <div class="content-grid" id="favorites-grid"></div>
+                    </div>
+                </section>
+
+                <!-- Settings Screen -->
+                <section id="screen-settings" class="screen">
+                    <div class="screen-content">
+                        <div class="settings-container" id="settings-container"></div>
+                    </div>
+                </section>
+            </main>
+        </div>
     </div>
 
     <!-- Detail Modal -->
