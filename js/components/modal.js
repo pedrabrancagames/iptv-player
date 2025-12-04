@@ -158,7 +158,15 @@ class ModalManager {
      */
     renderSeriesSeasons(series) {
         const episodes = series.episodes;
+        console.log('renderSeriesSeasons called:', { series, episodes });
+
+        if (!episodes || Object.keys(episodes).length === 0) {
+            console.warn('No episodes found for series');
+            return;
+        }
+
         const seasonNumbers = Object.keys(episodes).sort((a, b) => parseInt(a) - parseInt(b));
+        console.log('Season numbers:', seasonNumbers);
 
         // Store series data for later use
         this.currentSeries = series;
@@ -359,8 +367,9 @@ class ModalManager {
             statsEl.innerHTML += `<div class="detail-genres" style="margin-top:12px">${genresHtml}</div>`;
         }
 
-        // Cast
-        if (tmdbData.cast && tmdbData.cast.length > 0) {
+        // Cast - only if not a series with episodes (which uses detail-cast for seasons)
+        const hasSeriesSeasons = document.querySelector('.series-seasons');
+        if (tmdbData.cast && tmdbData.cast.length > 0 && !hasSeriesSeasons) {
             const castHtml = `
                 <div class="detail-section">
                     <h3 class="detail-section-title">Elenco</h3>
