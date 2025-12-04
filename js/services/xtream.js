@@ -13,6 +13,38 @@ class XtreamService {
     }
 
     /**
+     * Initialize with saved credentials
+     */
+    async initFromStorage() {
+        try {
+            const stored = await storage.get('settings', 'xtream_credentials');
+            if (stored?.value) {
+                this.updateCredentials(stored.value);
+            }
+        } catch (error) {
+            console.warn('Could not load saved credentials, using defaults');
+        }
+    }
+
+    /**
+     * Update credentials
+     */
+    updateCredentials(credentials) {
+        if (credentials.server) {
+            this.baseUrl = `${credentials.server}:${credentials.port || 80}`;
+        }
+        if (credentials.username) {
+            this.username = credentials.username;
+        }
+        if (credentials.password) {
+            this.password = credentials.password;
+        }
+        this.isAuthenticated = false;
+        this.userInfo = null;
+        console.log('Xtream credentials updated');
+    }
+
+    /**
      * Build API URL
      */
     buildUrl(endpoint, params = {}) {

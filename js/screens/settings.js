@@ -6,6 +6,7 @@ class SettingsScreen {
     constructor() {
         this.container = document.getElementById('settings-container');
         this.settings = {};
+        this.xtreamCredentials = {};
     }
 
     /**
@@ -13,6 +14,7 @@ class SettingsScreen {
      */
     async init() {
         await this.loadSettings();
+        await this.loadXtreamCredentials();
         this.render();
     }
 
@@ -26,6 +28,28 @@ class SettingsScreen {
         } catch (error) {
             console.warn('Could not load settings:', error);
             this.settings = { ...CONFIG.defaultSettings };
+        }
+    }
+
+    /**
+     * Load Xtream credentials
+     */
+    async loadXtreamCredentials() {
+        try {
+            const stored = await storage.get('settings', 'xtream_credentials');
+            this.xtreamCredentials = stored?.value || {
+                server: CONFIG.xtream.server,
+                port: CONFIG.xtream.port,
+                username: CONFIG.xtream.username,
+                password: CONFIG.xtream.password
+            };
+        } catch (error) {
+            this.xtreamCredentials = {
+                server: CONFIG.xtream.server,
+                port: CONFIG.xtream.port,
+                username: CONFIG.xtream.username,
+                password: CONFIG.xtream.password
+            };
         }
     }
 
@@ -46,15 +70,125 @@ class SettingsScreen {
     }
 
     /**
+     * Save Xtream credentials
+     */
+    async saveXtreamCredentials() {
+        try {
+            await storage.put('settings', {
+                key: 'xtream_credentials',
+                value: this.xtreamCredentials
+            });
+
+            // Update xtream service with new credentials
+            xtream.updateCredentials(this.xtreamCredentials);
+
+            toast.success('Salvo', 'Credenciais atualizadas');
+            return true;
+        } catch (error) {
+            console.error('Failed to save credentials:', error);
+            toast.error('Erro', 'Não foi possível salvar credenciais');
+            return false;
+        }
+    }
+
+    /**
+     * Test connection with current credentials
+     */
+    async testConnection() {
+        const server = document.getElementById('xtream-server').value.trim();
+        const port = document.getElementById('xtream-port').value.trim();
+        const username = document.getElementById('xtream-username').value.trim();
+        const password = document.getElementById('xtream-password').value.trim();
+
+        if (!server || !username || !password) {
+            toast.warning('Atenção', 'Preencha todos os campos');
+            return;
+        }
+
+        toast.info('Testando', 'Conectando ao servidor...');
+
+        try {
+            const testUrl = `${server}:${port}/player_api.php?username=${username}&password=${password}`;
+            const response = await fetch(testUrl);
+            const data = await response.json();
+
+            if (data.user_info) {
+                toast.success('Sucesso', `Conectado como ${data.user_info.username}`);
+                return true;
+            } else {
+                toast.error('Erro', 'Credenciais inválidas');
+                return false;
+            }
+        } catch (error) {
+            toast.error('Erro', 'Não foi possível conectar ao servidor');
+            return false;
+        }
+    }
+
+    /**
      * Render settings
      */
     render() {
         const subscriptionInfo = xtream.getSubscriptionInfo();
 
         this.container.innerHTML = `
+            <!-- IPTV Provider Settings -->
+            <div class="settings-group">
+                <h3 class="settings-group-title">🔧 Provedor IPTV</h3>
+                
+                <div class="settings-item">
+                    <span class="settings-label">Servidor</span>
+                    <input type="text" 
+                           id="xtream-server" 
+                           class="settings-input" 
+                           value="${this.xtreamCredentials.server || ''}"
+                           placeholder="http://exemplo.com"
+                           data-focusable="true">
+                </div>
+                
+                <div class="settings-item">
+                    <span class="settings-label">Porta</span>
+                    <input type="text" 
+                           id="xtream-port" 
+                           class="settings-input" 
+                           value="${this.xtreamCredentials.port || '80'}"
+                           placeholder="80"
+                           data-focusable="true">
+                </div>
+                
+                <div class="settings-item">
+                    <span class="settings-label">Usuário</span>
+                    <input type="text" 
+                           id="xtream-username" 
+                           class="settings-input" 
+                           value="${this.xtreamCredentials.username || ''}"
+                           placeholder="seu_usuario"
+                           data-focusable="true">
+                </div>
+                
+                <div class="settings-item">
+                    <span class="settings-label">Senha</span>
+                    <input type="password" 
+                           id="xtream-password" 
+                           class="settings-input" 
+                           value="${this.xtreamCredentials.password || ''}"
+                           placeholder="sua_senha"
+                           data-focusable="true">
+                </div>
+                
+                <div class="settings-actions">
+                    <button class="action-btn secondary" id="btn-test-connection" data-focusable="true">
+                        🔍 Testar Conexão
+                    </button>
+                    <button class="action-btn primary" id="btn-save-credentials" data-focusable="true">
+                        💾 Salvar e Reconectar
+                    </button>
+                </div>
+            </div>
+
             <!-- Account Info -->
             <div class="settings-group">
-                <h3 class="settings-group-title">Conta</h3>
+                <h3 class="settings-group-title">📊 Status da Conta</h3>
                 ${subscriptionInfo ? `
                     <div class="settings-item">
                         <span class="settings-label">Usuário</span>
@@ -82,7 +216,7 @@ class SettingsScreen {
 
             <!-- Playback Settings -->
             <div class="settings-group">
-                <h3 class="settings-group-title">Reprodução</h3>
+                <h3 class="settings-group-title">▶️ Reprodução</h3>
                 <div class="settings-item" data-focusable="true" data-setting="autoplay" tabindex="0">
                     <span class="settings-label">Reprodução automática</span>
                     <div class="toggle-switch ${this.settings.autoplay ? 'active' : ''}"></div>
@@ -95,7 +229,7 @@ class SettingsScreen {
 
             <!-- Content Settings -->
             <div class="settings-group">
-                <h3 class="settings-group-title">Conteúdo</h3>
+                <h3 class="settings-group-title">📺 Conteúdo</h3>
                 <div class="settings-item" data-focusable="true" data-setting="showAdultContent" tabindex="0">
                     <span class="settings-label">Conteúdo adulto</span>
                     <div class="toggle-switch ${this.settings.showAdultContent ? 'active' : ''}"></div>
@@ -104,7 +238,7 @@ class SettingsScreen {
 
             <!-- Storage -->
             <div class="settings-group">
-                <h3 class="settings-group-title">Armazenamento</h3>
+                <h3 class="settings-group-title">💾 Armazenamento</h3>
                 <div class="settings-item" data-focusable="true" id="btn-clear-cache" tabindex="0">
                     <span class="settings-label">Limpar cache</span>
                     <span class="settings-value">Liberar memória</span>
@@ -121,7 +255,7 @@ class SettingsScreen {
 
             <!-- App Info -->
             <div class="settings-group">
-                <h3 class="settings-group-title">Sobre</h3>
+                <h3 class="settings-group-title">ℹ️ Sobre</h3>
                 <div class="settings-item">
                     <span class="settings-label">Versão</span>
                     <span class="settings-value">${CONFIG.app.version}</span>
@@ -140,6 +274,47 @@ class SettingsScreen {
      * Bind events
      */
     bindEvents() {
+        // Test connection
+        document.getElementById('btn-test-connection')?.addEventListener('click', () => {
+            this.testConnection();
+        });
+
+        // Save credentials
+        document.getElementById('btn-save-credentials')?.addEventListener('click', async () => {
+            const server = document.getElementById('xtream-server').value.trim();
+            const port = document.getElementById('xtream-port').value.trim() || '80';
+            const username = document.getElementById('xtream-username').value.trim();
+            const password = document.getElementById('xtream-password').value.trim();
+
+            if (!server || !username || !password) {
+                toast.warning('Atenção', 'Preencha todos os campos obrigatórios');
+                return;
+            }
+
+            // Test first
+            const testOk = await this.testConnection();
+            if (!testOk) return;
+
+            // Save credentials
+            this.xtreamCredentials = { server, port: parseInt(port), username, password };
+            const saved = await this.saveXtreamCredentials();
+
+            if (saved) {
+                // Reload data with new credentials
+                toast.info('Atualizando', 'Recarregando dados...');
+                try {
+                    await storage.clear('channels');
+                    await storage.clear('categories');
+                    await xtream.authenticate();
+                    await app.loadInitialData();
+                    this.render(); // Refresh to show new account info
+                    toast.success('Pronto', 'Lista IPTV atualizada!');
+                } catch (error) {
+                    toast.error('Erro', 'Não foi possível carregar a nova lista');
+                }
+            }
+        });
+
         // Toggle settings
         this.container.querySelectorAll('[data-setting]').forEach(item => {
             item.addEventListener('click', () => {

@@ -32,6 +32,7 @@ class App {
 
             // Authenticate with Xtream
             this.showLoading('Conectando ao servidor...');
+            await xtream.initFromStorage(); // Load saved credentials first
             await xtream.authenticate();
 
             // Update connection status
