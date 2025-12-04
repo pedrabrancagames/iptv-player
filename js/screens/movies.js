@@ -39,17 +39,39 @@ class MoviesScreen {
      * Render categories
      */
     renderCategories() {
-        this.categoriesContainer.innerHTML = this.categories.map((cat, index) => `
-            <button class="category-btn ${index === 0 ? 'active' : ''}" 
-                    data-category-id="${cat.originalId}"
-                    data-focusable="true">
-                ${cat.category_name}
-            </button>
-        `).join('');
+        this.categoriesContainer.innerHTML = `
+            <div class="category-nav-container">
+                <button class="category-nav-btn" id="movie-cat-prev" data-focusable="true">◀</button>
+                <div class="category-scroll" id="movie-cat-scroll">
+                    ${this.categories.map((cat, index) => `
+                        <button class="category-btn ${index === 0 ? 'active' : ''}" 
+                                data-category-id="${cat.originalId}"
+                                data-focusable="true">
+                            ${cat.category_name}
+                        </button>
+                    `).join('')}
+                </div>
+                <button class="category-nav-btn" id="movie-cat-next" data-focusable="true">▶</button>
+            </div>
+        `;
 
-        this.categoriesContainer.querySelectorAll('.category-btn').forEach(btn => {
+        const scrollContainer = document.getElementById('movie-cat-scroll');
+        const prevBtn = document.getElementById('movie-cat-prev');
+        const nextBtn = document.getElementById('movie-cat-next');
+
+        // Navigation button events
+        prevBtn.addEventListener('click', () => {
+            scrollContainer.scrollBy({ left: -300, behavior: 'smooth' });
+        });
+
+        nextBtn.addEventListener('click', () => {
+            scrollContainer.scrollBy({ left: 300, behavior: 'smooth' });
+        });
+
+        // Category button events
+        scrollContainer.querySelectorAll('.category-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                this.categoriesContainer.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                scrollContainer.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.loadCategory(btn.dataset.categoryId);
             });

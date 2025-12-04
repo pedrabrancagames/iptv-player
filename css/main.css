@@ -287,6 +287,7 @@ body {
     gap: var(--space-sm);
     overflow-x: auto;
     padding-bottom: var(--space-sm);
+    flex: 1;
 }
 
 .category-btn {
@@ -319,6 +320,59 @@ body {
     outline: none;
     box-shadow: var(--focus-ring);
     transform: scale(1.05);
+}
+
+/* Category Navigation with Buttons */
+.category-nav-container {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.category-nav-btn {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full);
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    opacity: 0.8;
+}
+
+.category-nav-btn:hover {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.category-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.category-scroll {
+    display: flex;
+    gap: var(--space-sm);
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    flex: 1;
+    padding: var(--space-xs) 0;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.category-scroll::-webkit-scrollbar {
+    display: none;
 }
 
 /* ================================================

@@ -111,21 +111,32 @@ class ModalManager {
         }
         document.getElementById('detail-stats').innerHTML = stats.join('');
 
-        // Actions
-        document.getElementById('detail-actions').innerHTML = `
-            <button class="action-btn primary" data-focusable="true" id="btn-play-detail">
-                ▶ Assistir
-            </button>
-            <button class="action-btn secondary" data-focusable="true" id="btn-favorite-detail">
-                ❤️ Favorito
-            </button>
-        `;
+        // Check if it's a series with episodes
+        const isSeries = item.type === 'series' || item.episodes;
 
-        // Play button event
-        document.getElementById('btn-play-detail').addEventListener('click', () => {
-            this.closeAll();
-            player.play(item);
-        });
+        // Actions - different for series vs movies
+        if (isSeries && item.episodes) {
+            document.getElementById('detail-actions').innerHTML = `
+                <button class="action-btn secondary" data-focusable="true" id="btn-favorite-detail">
+                    ❤️ Favorito
+                </button>
+            `;
+        } else {
+            document.getElementById('detail-actions').innerHTML = `
+                <button class="action-btn primary" data-focusable="true" id="btn-play-detail">
+                    ▶ Assistir
+                </button>
+                <button class="action-btn secondary" data-focusable="true" id="btn-favorite-detail">
+                    ❤️ Favorito
+                </button>
+            `;
+
+            // Play button event
+            document.getElementById('btn-play-detail').addEventListener('click', () => {
+                this.closeAll();
+                player.play(item);
+            });
+        }
 
         // Favorite button event
         document.getElementById('btn-favorite-detail').addEventListener('click', async () => {
@@ -135,6 +146,171 @@ class ModalManager {
         // Clear cast and crew until loaded
         document.getElementById('detail-cast').innerHTML = '';
         document.getElementById('detail-crew').innerHTML = '';
+
+        // If it's a series with episodes, render seasons
+        if (isSeries && item.episodes) {
+            this.renderSeriesSeasons(item);
+        }
+    }
+
+    /**
+     * Render series seasons and episodes
+     */
+    renderSeriesSeasons(series) {
+        const episodes = series.episodes;
+        const seasonNumbers = Object.keys(episodes).sort((a, b) => parseInt(a) - parseInt(b));
+
+        // Store series data for later use
+        this.currentSeries = series;
+        this.currentSeasonEpisodes = episodes;
+
+        let seasonsHtml = `
+            <div class="detail-section series-seasons">
+                <h3 class="detail-section-title">Temporadas</h3>
+                <div class="seasons-list">
+                    ${seasonNumbers.map(seasonNum => `
+                        <button class="season-btn" data-focusable="true" data-season="${seasonNum}" tabindex="0">
+                            Temporada ${seasonNum}
+                            <span class="season-count">${episodes[seasonNum].length} episódios</span>
+                        </button>
+                    `).join('')}
+                </div>
+                <div class="episodes-container" id="episodes-container"></div>
+            </div>
+        `;
+
+        document.getElementById('detail-cast').innerHTML = seasonsHtml;
+        document.getElementById('detail-crew').innerHTML = '';
+
+        // Add click handlers to season buttons
+        document.querySelectorAll('.season-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.season-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.renderEpisodes(btn.dataset.season);
+            });
+        });
+
+        // Load first season episodes by default
+        if (seasonNumbers.length > 0) {
+            document.querySelector('.season-btn').classList.add('active');
+            this.renderEpisodes(seasonNumbers[0]);
+        }
+    }
+
+    /**
+     * Render episodes for a season
+     */
+    renderEpisodes(seasonNum) {
+        const episodes = this.currentSeasonEpisodes[seasonNum];
+        const container = document.getElementById('episodes-container');
+
+        container.innerHTML = `
+            <div class="episodes-list">
+                ${episodes.map(ep => `
+                    <div class="episode-card" data-focusable="true" data-episode-id="${ep.id}" tabindex="0">
+                        <div class="episode-thumbnail">
+                            ${ep.info?.movie_image
+                ? `<img src="${ep.info.movie_image}" alt="Episódio ${ep.episode_num}">`
+                : `<div class="episode-thumb-placeholder">▶</div>`
+            }
+                            <div class="episode-number">E${ep.episode_num}</div>
+                        </div>
+                        <div class="episode-info">
+                            <div class="episode-title">${ep.title || `Episódio ${ep.episode_num}`}</div>
+                            ${ep.info?.plot ? `<div class="episode-plot">${ep.info.plot.substring(0, 100)}${ep.info.plot.length > 100 ? '...' : ''}</div>` : ''}
+                            ${ep.info?.duration ? `<div class="episode-duration">⏱️ ${ep.info.duration}</div>` : ''}
+                        </div>
+                        <button class="episode-play-btn" data-focusable="true">▶</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        // Add click handlers to episodes
+        container.querySelectorAll('.episode-card').forEach((card, index) => {
+            const episode = episodes[index];
+
+            card.addEventListener('click', () => {
+                this.showEpisodeDetail(episode);
+            });
+
+            card.querySelector('.episode-play-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.playEpisode(episode);
+            });
+        });
+    }
+
+    /**
+     * Show episode detail
+     */
+    showEpisodeDetail(episode) {
+        const info = episode.info || {};
+
+        // Update modal with episode info
+        document.getElementById('detail-title').textContent = episode.title || `Episódio ${episode.episode_num}`;
+        document.getElementById('detail-overview').textContent = info.plot || 'Sem descrição disponível.';
+
+        // Update backdrop if available
+        if (info.movie_image) {
+            const backdrop = document.getElementById('detail-backdrop');
+            backdrop.style.backgroundImage = `url(${info.movie_image})`;
+        }
+
+        // Update stats
+        const stats = [];
+        if (info.releasedate) {
+            stats.push(`<span class="detail-stat">📅 ${info.releasedate}</span>`);
+        }
+        if (info.duration) {
+            stats.push(`<span class="detail-stat">⏱️ ${info.duration}</span>`);
+        }
+        if (info.rating) {
+            stats.push(`<span class="detail-stat rating">★ ${parseFloat(info.rating).toFixed(1)}</span>`);
+        }
+        document.getElementById('detail-stats').innerHTML = stats.join('');
+
+        // Update actions to show play button
+        document.getElementById('detail-actions').innerHTML = `
+            <button class="action-btn primary" data-focusable="true" id="btn-play-episode">
+                ▶ Reproduzir Episódio
+            </button>
+            <button class="action-btn secondary" data-focusable="true" id="btn-back-to-seasons">
+                ← Voltar para Temporadas
+            </button>
+        `;
+
+        document.getElementById('btn-play-episode').addEventListener('click', () => {
+            this.playEpisode(episode);
+        });
+
+        document.getElementById('btn-back-to-seasons').addEventListener('click', () => {
+            // Restore series view
+            this.setDetailBasicInfo(this.currentSeries);
+            if (this.currentSeries.episodes) {
+                this.renderSeriesSeasons(this.currentSeries);
+            }
+        });
+
+        // Hide seasons list temporarily
+        const seasonsSection = document.querySelector('.series-seasons');
+        if (seasonsSection) {
+            seasonsSection.style.display = 'none';
+        }
+    }
+
+    /**
+     * Play an episode
+     */
+    playEpisode(episode) {
+        this.closeAll();
+        player.play({
+            id: episode.id,
+            name: episode.title || `Episódio ${episode.episode_num}`,
+            streamUrl: episode.streamUrl,
+            type: 'episode'
+        });
     }
 
     /**

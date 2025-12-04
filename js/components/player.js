@@ -70,6 +70,12 @@ class VideoPlayer {
     async play(item) {
         this.currentItem = item;
 
+        // Destroy previous HLS instance if exists
+        if (this.hls) {
+            this.hls.destroy();
+            this.hls = null;
+        }
+
         // Show player
         this.container.classList.remove('hidden');
         navigation.setModalOpen(true);
@@ -89,17 +95,64 @@ class VideoPlayer {
         console.log('Playing:', streamUrl);
 
         try {
-            // Set source
-            this.video.src = streamUrl;
+            // Check if it's an HLS stream
+            const isHLS = streamUrl.includes('.m3u8');
 
-            // Start playback
-            await this.video.play();
+            if (isHLS && typeof Hls !== 'undefined' && Hls.isSupported()) {
+                // Use HLS.js for HLS streams
+                this.hls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 90
+                });
 
-            // Save to history
-            this.saveToHistory(item);
+                this.hls.loadSource(streamUrl);
+                this.hls.attachMedia(this.video);
 
-            // Show controls briefly
-            this.showControls();
+                this.hls.on(Hls.Events.MANIFEST_PARSED, async () => {
+                    try {
+                        await this.video.play();
+                        this.saveToHistory(item);
+                        this.showControls();
+                    } catch (e) {
+                        console.error('HLS playback error:', e);
+                        toast.error('Erro de reprodução', e.message);
+                    }
+                });
+
+                this.hls.on(Hls.Events.ERROR, (event, data) => {
+                    console.error('HLS error:', data);
+                    if (data.fatal) {
+                        switch (data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                toast.error('Erro de rede', 'Problema ao carregar stream');
+                                this.hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                toast.error('Erro de mídia', 'Tentando recuperar...');
+                                this.hls.recoverMediaError();
+                                break;
+                            default:
+                                toast.error('Erro fatal', 'Não foi possível reproduzir');
+                                this.close();
+                        }
+                    }
+                });
+
+            } else if (isHLS && this.video.canPlayType('application/vnd.apple.mpegurl')) {
+                // Native HLS support (Safari, webOS)
+                this.video.src = streamUrl;
+                await this.video.play();
+                this.saveToHistory(item);
+                this.showControls();
+
+            } else {
+                // Standard video (MP4, TS, etc.)
+                this.video.src = streamUrl;
+                await this.video.play();
+                this.saveToHistory(item);
+                this.showControls();
+            }
 
         } catch (error) {
             console.error('Playback error:', error);
@@ -166,6 +219,12 @@ class VideoPlayer {
         // Save progress
         if (this.currentItem && this.video.duration) {
             this.saveProgress();
+        }
+
+        // Destroy HLS instance
+        if (this.hls) {
+            this.hls.destroy();
+            this.hls = null;
         }
 
         // Stop video
