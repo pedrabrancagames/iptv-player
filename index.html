@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>IPTV Player</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/screens.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <span class="logo-icon">▶</span>
+                <span class="logo-text">IPTV Player</span>
+            </div>
+            <div class="loading-spinner"></div>
+            <p class="loading-message">Carregando...</p>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app" class="app hidden">
+        <!-- Sidebar Navigation -->
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <span class="logo-icon">▶</span>
+                <span class="logo-text">IPTV</span>
+            </div>
+            <ul class="sidebar-menu" id="sidebar-menu">
+                <li class="menu-item active" data-screen="home" data-focusable="true">
+                    <span class="menu-icon">🏠</span>
+                    <span class="menu-label">Início</span>
+                </li>
+                <li class="menu-item" data-screen="live" data-focusable="true">
+                    <span class="menu-icon">📺</span>
+                    <span class="menu-label">TV ao Vivo</span>
+                </li>
+                <li class="menu-item" data-screen="movies" data-focusable="true">
+                    <span class="menu-icon">🎬</span>
+                    <span class="menu-label">Filmes</span>
+                </li>
+                <li class="menu-item" data-screen="series" data-focusable="true">
+                    <span class="menu-icon">📺</span>
+                    <span class="menu-label">Séries</span>
+                </li>
+                <li class="menu-item" data-screen="search" data-focusable="true">
+                    <span class="menu-icon">🔍</span>
+                    <span class="menu-label">Buscar</span>
+                </li>
+                <li class="menu-item" data-screen="favorites" data-focusable="true">
+                    <span class="menu-icon">❤️</span>
+                    <span class="menu-label">Favoritos</span>
+                </li>
+                <li class="menu-item" data-screen="settings" data-focusable="true">
+                    <span class="menu-icon">⚙️</span>
+                    <span class="menu-label">Configurações</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span class="connection-status connected"></span>
+                    <span class="connection-text">Conectado</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="main-content">
+            <!-- Home Screen -->
+            <section id="screen-home" class="screen active">
+                <div class="screen-header">
+                    <h1 class="screen-title">Início</h1>
+                    <div class="current-time" id="current-time"></div>
+                </div>
+                <div class="screen-content" id="home-content">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Live TV Screen -->
+            <section id="screen-live" class="screen">
+                <div class="screen-header">
+                    <h1 class="screen-title">TV ao Vivo</h1>
+                    <div class="category-filter" id="live-categories"></div>
+                </div>
+                <div class="screen-content">
+                    <div class="content-grid" id="live-grid"></div>
+                </div>
+            </section>
+
+            <!-- Movies Screen -->
+            <section id="screen-movies" class="screen">
+                <div class="screen-header">
+                    <h1 class="screen-title">Filmes</h1>
+                    <div class="category-filter" id="movie-categories"></div>
+                </div>
+                <div class="screen-content">
+                    <div class="content-grid" id="movies-grid"></div>
+                </div>
+            </section>
+
+            <!-- Series Screen -->
+            <section id="screen-series" class="screen">
+                <div class="screen-header">
+                    <h1 class="screen-title">Séries</h1>
+                    <div class="category-filter" id="series-categories"></div>
+                </div>
+                <div class="screen-content">
+                    <div class="content-grid" id="series-grid"></div>
+                </div>
+            </section>
+
+            <!-- Search Screen -->
+            <section id="screen-search" class="screen">
+                <div class="screen-header">
+                    <h1 class="screen-title">Buscar</h1>
+                </div>
+                <div class="screen-content">
+                    <div class="search-container">
+                        <input type="text" id="search-input" class="search-input" 
+                               placeholder="Digite para buscar..." data-focusable="true">
+                        <div class="search-results" id="search-results"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Favorites Screen -->
+            <section id="screen-favorites" class="screen">
+                <div class="screen-header">
+                    <h1 class="screen-title">Favoritos</h1>
+                </div>
+                <div class="screen-content">
+                    <div class="content-grid" id="favorites-grid"></div>
+                </div>
+            </section>
+
+            <!-- Settings Screen -->
+            <section id="screen-settings" class="screen">
+                <div class="screen-header">
+                    <h1 class="screen-title">Configurações</h1>
+                </div>
+                <div class="screen-content">
+                    <div class="settings-container" id="settings-container"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detail-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content detail-content">
+            <div class="detail-backdrop" id="detail-backdrop"></div>
+            <div class="detail-overlay"></div>
+            <div class="detail-info">
+                <div class="detail-poster" id="detail-poster"></div>
+                <div class="detail-meta">
+                    <h1 class="detail-title" id="detail-title"></h1>
+                    <div class="detail-stats" id="detail-stats"></div>
+                    <p class="detail-overview" id="detail-overview"></p>
+                    <div class="detail-actions" id="detail-actions"></div>
+                    <div class="detail-cast" id="detail-cast"></div>
+                    <div class="detail-crew" id="detail-crew"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Person Modal -->
+    <div id="person-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content person-content">
+            <div class="person-header">
+                <div class="person-photo" id="person-photo"></div>
+                <div class="person-info">
+                    <h1 class="person-name" id="person-name"></h1>
+                    <p class="person-bio" id="person-bio"></p>
+                </div>
+            </div>
+            <div class="person-filmography">
+                <h2>Filmes na sua lista</h2>
+                <div class="filmography-grid" id="person-movies"></div>
+                <h2>Séries na sua lista</h2>
+                <div class="filmography-grid" id="person-series"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Player -->
+    <div id="player-container" class="player-container hidden">
+        <video id="video-player" class="video-player"></video>
+        <div class="player-overlay" id="player-overlay">
+            <div class="player-header">
+                <button class="player-back" id="player-back" data-focusable="true">← Voltar</button>
+                <div class="player-title" id="player-title"></div>
+            </div>
+            <div class="player-controls">
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar">
+                        <div class="progress-filled" id="progress-filled"></div>
+                        <div class="progress-buffered" id="progress-buffered"></div>
+                    </div>
+                    <div class="time-display">
+                        <span id="current-time-display">00:00</span>
+                        <span>/</span>
+                        <span id="duration-display">00:00</span>
+                    </div>
+                </div>
+                <div class="control-buttons">
+                    <button class="control-btn" id="btn-rewind" data-focusable="true">⏪</button>
+                    <button class="control-btn play-pause" id="btn-play-pause" data-focusable="true">▶</button>
+                    <button class="control-btn" id="btn-forward" data-focusable="true">⏩</button>
+                    <div class="volume-control">
+                        <button class="control-btn" id="btn-mute" data-focusable="true">🔊</button>
+                        <div class="volume-bar" id="volume-bar">
+                            <div class="volume-filled" id="volume-filled"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/lib/webOSTV.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/services/storage.js"></script>
+    <script src="js/services/api.js"></script>
+    <script src="js/services/tmdb.js"></script>
+    <script src="js/services/xtream.js"></script>
+    <script src="js/components/navigation.js"></script>
+    <script src="js/components/grid.js"></script>
+    <script src="js/components/player.js"></script>
+    <script src="js/components/modal.js"></script>
+    <script src="js/components/toast.js"></script>
+    <script src="js/screens/home.js"></script>
+    <script src="js/screens/live.js"></script>
+    <script src="js/screens/movies.js"></script>
+    <script src="js/screens/series.js"></script>
+    <script src="js/screens/search.js"></script>
+    <script src="js/screens/favorites.js"></script>
+    <script src="js/screens/settings.js"></script>
+    <script src="js/screens/detail.js"></script>
+    <script src="js/screens/person.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
