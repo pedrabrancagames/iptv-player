@@ -1471,3 +1471,53 @@
     color: var(--text-primary);
     outline: none;
 }
+
+/* M3U List Items */
+.m3u-lists-container {
+    margin-top: var(--space-md);
+}
+
+.m3u-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-sm);
+    border: 1px solid var(--glass-border);
+}
+
+.m3u-list-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.m3u-list-name {
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+}
+
+.m3u-list-count {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.m3u-remove-btn {
+    padding: var(--space-sm) var(--space-md);
+    background: transparent;
+    border: 1px solid var(--error);
+    border-radius: var(--radius-md);
+    color: var(--error);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.m3u-remove-btn:hover,
+.m3u-remove-btn:focus {
+    background: var(--error);
+    color: white;
+    outline: none;
+}

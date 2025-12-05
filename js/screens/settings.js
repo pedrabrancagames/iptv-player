@@ -7,6 +7,7 @@ class SettingsScreen {
         this.container = document.getElementById('settings-container');
         this.settings = {};
         this.xtreamCredentials = {};
+        this.m3uLists = [];
     }
 
     /**
@@ -15,6 +16,7 @@ class SettingsScreen {
     async init() {
         await this.loadSettings();
         await this.loadXtreamCredentials();
+        await this.loadM3ULists();
         this.render();
     }
 
@@ -87,6 +89,105 @@ class SettingsScreen {
         } catch (error) {
             console.error('Failed to save credentials:', error);
             toast.error('Erro', 'Não foi possível salvar credenciais');
+            return false;
+        }
+    }
+
+    /**
+     * Load M3U lists
+     */
+    async loadM3ULists() {
+        try {
+            const stored = await storage.get('settings', 'm3u_lists');
+            this.m3uLists = stored?.value || [];
+        } catch (error) {
+            this.m3uLists = [];
+        }
+    }
+
+    /**
+     * Save M3U lists
+     */
+    async saveM3ULists() {
+        try {
+            await storage.put('settings', {
+                key: 'm3u_lists',
+                value: this.m3uLists
+            });
+            return true;
+        } catch (error) {
+            console.error('Failed to save M3U lists:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Add M3U list
+     */
+    async addM3UList(name, url) {
+        if (!name || !url) {
+            toast.warning('Atenção', 'Preencha todos os campos');
+            return false;
+        }
+
+        toast.info('Carregando', 'Buscando lista M3U...');
+
+        try {
+            const channels = await m3uParser.fetchAndParse(url);
+
+            if (channels.length === 0) {
+                toast.warning('Aviso', 'Nenhum canal encontrado na lista');
+                return false;
+            }
+
+            const listId = 'm3u_' + Date.now();
+            const newList = {
+                id: listId,
+                name: name,
+                url: url,
+                channelCount: channels.length,
+                addedAt: new Date().toISOString()
+            };
+
+            this.m3uLists.push(newList);
+            await this.saveM3ULists();
+
+            // Store channels with list ID
+            const channelsWithList = channels.map(ch => ({
+                ...ch,
+                listId: listId,
+                type: ch.type || 'live'
+            }));
+            await storage.putMany('channels', channelsWithList);
+
+            toast.success('Sucesso', `${channels.length} canais adicionados`);
+            return true;
+        } catch (error) {
+            console.error('Failed to add M3U list:', error);
+            toast.error('Erro', 'Não foi possível carregar a lista M3U');
+            return false;
+        }
+    }
+
+    /**
+     * Remove M3U list
+     */
+    async removeM3UList(listId) {
+        try {
+            this.m3uLists = this.m3uLists.filter(l => l.id !== listId);
+            await this.saveM3ULists();
+
+            // Remove channels from this list
+            const allChannels = await storage.getAll('channels');
+            const channelsToKeep = allChannels.filter(ch => ch.listId !== listId);
+            await storage.clear('channels');
+            await storage.putMany('channels', channelsToKeep);
+
+            toast.success('Removido', 'Lista M3U removida');
+            return true;
+        } catch (error) {
+            console.error('Failed to remove M3U list:', error);
+            toast.error('Erro', 'Não foi possível remover a lista');
             return false;
         }
     }
@@ -184,6 +285,56 @@ class SettingsScreen {
                         💾 Salvar e Reconectar
                     </button>
                 </div>
+            </div>
+
+            <!-- M3U Lists -->
+            <div class="settings-group">
+                <h3 class="settings-group-title">📋 Listas M3U/M3U8</h3>
+                
+                <div class="settings-item">
+                    <span class="settings-label">Nome da Lista</span>
+                    <input type="text" 
+                           id="m3u-name" 
+                           class="settings-input" 
+                           placeholder="Minha Lista IPTV"
+                           data-focusable="true">
+                </div>
+                
+                <div class="settings-item">
+                    <span class="settings-label">URL da Lista</span>
+                    <input type="url" 
+                           id="m3u-url" 
+                           class="settings-input" 
+                           placeholder="http://exemplo.com/lista.m3u"
+                           data-focusable="true">
+                </div>
+                
+                <div class="settings-actions">
+                    <button class="action-btn primary" id="btn-add-m3u" data-focusable="true">
+                        ➕ Adicionar Lista
+                    </button>
+                </div>
+
+                ${this.m3uLists.length > 0 ? `
+                    <div class="m3u-lists-container">
+                        <h4 style="margin: var(--space-md) 0; color: var(--text-secondary);">Listas Cadastradas:</h4>
+                        ${this.m3uLists.map(list => `
+                            <div class="m3u-list-item" data-list-id="${list.id}">
+                                <div class="m3u-list-info">
+                                    <span class="m3u-list-name">${list.name}</span>
+                                    <span class="m3u-list-count">${list.channelCount} canais</span>
+                                </div>
+                                <button class="m3u-remove-btn" data-focusable="true" data-list-id="${list.id}">
+                                    🗑️ Remover
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : `
+                    <p style="color: var(--text-muted); font-size: var(--font-size-sm); margin-top: var(--space-md);">
+                        Nenhuma lista M3U cadastrada
+                    </p>
+                `}
             </div>
 
             <!-- Account Info -->
@@ -340,6 +491,30 @@ class SettingsScreen {
                     toast.error('Erro', 'Não foi possível carregar a nova lista');
                 }
             }
+        });
+
+        // Add M3U list
+        document.getElementById('btn-add-m3u')?.addEventListener('click', async () => {
+            const name = document.getElementById('m3u-name').value.trim();
+            const url = document.getElementById('m3u-url').value.trim();
+
+            const success = await this.addM3UList(name, url);
+            if (success) {
+                document.getElementById('m3u-name').value = '';
+                document.getElementById('m3u-url').value = '';
+                this.render(); // Refresh to show new list
+            }
+        });
+
+        // Remove M3U lists
+        this.container.querySelectorAll('.m3u-remove-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const listId = btn.dataset.listId;
+                if (confirm('Remover esta lista e todos os seus canais?')) {
+                    await this.removeM3UList(listId);
+                    this.render();
+                }
+            });
         });
 
         // Toggle settings
