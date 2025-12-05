@@ -222,6 +222,9 @@ class VideoPlayer {
      * Close player
      */
     close() {
+        // Cancel any auto-play countdown
+        this.cancelAutoPlay();
+
         // Save progress
         if (this.currentItem && this.video.duration) {
             this.saveProgress();
@@ -233,9 +236,10 @@ class VideoPlayer {
             this.hls = null;
         }
 
-        // Stop video
+        // Stop video and clear source properly
         this.video.pause();
-        this.video.src = '';
+        this.video.removeAttribute('src');
+        this.video.load(); // Reset the video element
 
         // Hide player
         this.container.classList.add('hidden');
@@ -247,6 +251,7 @@ class VideoPlayer {
         }
 
         this.currentItem = null;
+        this.nextEpisode = null;
     }
 
     /**

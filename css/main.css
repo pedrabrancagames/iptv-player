@@ -385,32 +385,53 @@ body {
 }
 
 /* ================================================
-   Scrollbar Styling
+   Scrollbar Styling - Dark Theme
    ================================================ */
+
+/* Global scrollbar styling */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(229, 9, 20, 0.3) transparent;
+}
+
 .screen-content::-webkit-scrollbar,
 .content-grid::-webkit-scrollbar,
-.sidebar-categories::-webkit-scrollbar {
-    width: 8px;
+.sidebar-categories::-webkit-scrollbar,
+.detail-body::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
 }
 
 .screen-content::-webkit-scrollbar-track,
 .content-grid::-webkit-scrollbar-track,
-.sidebar-categories::-webkit-scrollbar-track {
-    background: var(--bg-secondary);
+.sidebar-categories::-webkit-scrollbar-track,
+.detail-body::-webkit-scrollbar-track,
+.modal-content::-webkit-scrollbar-track {
+    background: transparent;
     border-radius: var(--radius-full);
 }
 
 .screen-content::-webkit-scrollbar-thumb,
 .content-grid::-webkit-scrollbar-thumb,
-.sidebar-categories::-webkit-scrollbar-thumb {
-    background: var(--bg-tertiary);
+.sidebar-categories::-webkit-scrollbar-thumb,
+.detail-body::-webkit-scrollbar-thumb,
+.modal-content::-webkit-scrollbar-thumb {
+    background: rgba(229, 9, 20, 0.4);
     border-radius: var(--radius-full);
 }
 
 .screen-content::-webkit-scrollbar-thumb:hover,
 .content-grid::-webkit-scrollbar-thumb:hover,
-.sidebar-categories::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
+.sidebar-categories::-webkit-scrollbar-thumb:hover,
+.detail-body::-webkit-scrollbar-thumb:hover,
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(229, 9, 20, 0.7);
+}
+
+/* Scrollbar corner */
+::-webkit-scrollbar-corner {
+    background: transparent;
 }
 
 /* ================================================
