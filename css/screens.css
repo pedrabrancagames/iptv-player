@@ -497,3 +497,133 @@
 .nav-highlight:focus::after {
     opacity: 1;
 }
+/* Hero Indicators */
+.hero-indicators {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.hero-indicator {
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.hero-indicator:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.hero-indicator.active {
+    background: var(--accent-primary);
+    width: 60px;
+}
+
+.hero-indicator:focus {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+/* Skeleton Loading Improvements */
+.skeleton-hero {
+    height: 450px;
+    background: var(--bg-tertiary);
+}
+
+.skeleton-shimmer {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Continue Card Improvements */
+.continue-thumbnail-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.continue-play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 60px;
+    height: 60px;
+    background: var(--accent-gradient);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    transition: transform 0.3s ease;
+    box-shadow: var(--shadow-glow);
+}
+
+.continue-card:hover .continue-play-icon,
+.continue-card:focus .continue-play-icon {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.continue-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-md);
+    padding-top: var(--space-xl);
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+}
+
+/* Card Overlay Play Icon */
+.card-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.content-card:hover .card-overlay,
+.content-card:focus .card-overlay {
+    opacity: 1;
+}
+
+.card-play-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--accent-gradient);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+    box-shadow: var(--shadow-glow);
+}
+
+.content-card:hover .card-play-icon,
+.content-card:focus .card-play-icon {
+    transform: scale(1);
+}
+
+.card-year {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: 2px;
+}

@@ -22,6 +22,12 @@ class VideoPlayer {
         this.controlsTimeout = null;
         this.currentItem = null;
 
+        // Auto-play next episode
+        this.nextEpisode = null;
+        this.autoPlayEnabled = true;
+        this.autoPlayCountdown = null;
+        this.autoPlaySeconds = 10;
+
         this.init();
     }
 
@@ -406,8 +412,103 @@ class VideoPlayer {
         this.updatePlayPauseButton();
         this.showControls();
 
-        // Could auto-play next episode here
-        toast.info('Fim', 'Reprodução finalizada');
+        // Check for next episode auto-play
+        if (this.nextEpisode && this.autoPlayEnabled) {
+            this.showAutoPlayUI();
+        } else {
+            toast.info('Fim', 'Reprodução finalizada');
+        }
+    }
+
+    /**
+     * Set next episode for auto-play
+     */
+    setNextEpisode(episode) {
+        this.nextEpisode = episode;
+    }
+
+    /**
+     * Show auto-play UI with countdown
+     */
+    showAutoPlayUI() {
+        // Create auto-play overlay
+        const autoPlayDiv = document.createElement('div');
+        autoPlayDiv.id = 'auto-play-overlay';
+        autoPlayDiv.className = 'auto-play-overlay';
+
+        let seconds = this.autoPlaySeconds;
+
+        autoPlayDiv.innerHTML = `
+            <div class="auto-play-content">
+                <div class="auto-play-thumbnail">
+                    ${this.nextEpisode.stream_icon || this.nextEpisode.cover
+                ? `<img src="${this.nextEpisode.stream_icon || this.nextEpisode.cover}" alt="Next">`
+                : '<div class="auto-play-placeholder">▶</div>'
+            }
+                </div>
+                <div class="auto-play-info">
+                    <div class="auto-play-label">Próximo episódio em</div>
+                    <div class="auto-play-countdown" id="auto-play-countdown">${seconds}</div>
+                    <div class="auto-play-title">${this.nextEpisode.title || this.nextEpisode.name}</div>
+                </div>
+                <div class="auto-play-actions">
+                    <button class="auto-play-btn primary" id="auto-play-now" data-focusable="true">
+                        ▶ Reproduzir Agora
+                    </button>
+                    <button class="auto-play-btn secondary" id="auto-play-cancel" data-focusable="true">
+                        ✕ Cancelar
+                    </button>
+                </div>
+            </div>
+        `;
+
+        this.container.appendChild(autoPlayDiv);
+
+        const countdownEl = document.getElementById('auto-play-countdown');
+        const playNowBtn = document.getElementById('auto-play-now');
+        const cancelBtn = document.getElementById('auto-play-cancel');
+
+        // Start countdown
+        this.autoPlayCountdown = setInterval(() => {
+            seconds--;
+            if (countdownEl) countdownEl.textContent = seconds;
+
+            if (seconds <= 0) {
+                this.playNextEpisode();
+            }
+        }, 1000);
+
+        // Button events
+        playNowBtn.addEventListener('click', () => this.playNextEpisode());
+        cancelBtn.addEventListener('click', () => this.cancelAutoPlay());
+
+        // Focus play button
+        setTimeout(() => playNowBtn.focus(), 100);
+    }
+
+    /**
+     * Play next episode
+     */
+    playNextEpisode() {
+        this.cancelAutoPlay();
+        if (this.nextEpisode) {
+            this.play(this.nextEpisode);
+        }
+    }
+
+    /**
+     * Cancel auto-play
+     */
+    cancelAutoPlay() {
+        if (this.autoPlayCountdown) {
+            clearInterval(this.autoPlayCountdown);
+            this.autoPlayCountdown = null;
+        }
+
+        const overlay = document.getElementById('auto-play-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
     }
 
     onError(event) {

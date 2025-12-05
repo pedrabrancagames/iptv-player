@@ -313,13 +313,68 @@ class ModalManager {
      * Play an episode
      */
     playEpisode(episode) {
+        // Find next episode for auto-play
+        const nextEpisode = this.findNextEpisode(episode);
+
         this.closeAll();
-        player.play({
+
+        const currentEp = {
             id: episode.id,
             name: episode.title || `Episódio ${episode.episode_num}`,
             streamUrl: episode.streamUrl,
+            stream_icon: episode.info?.movie_image || this.currentSeries?.cover,
             type: 'episode'
-        });
+        };
+
+        player.play(currentEp);
+
+        // Set next episode for auto-play
+        if (nextEpisode) {
+            player.setNextEpisode({
+                id: nextEpisode.id,
+                name: nextEpisode.title || `Episódio ${nextEpisode.episode_num}`,
+                title: nextEpisode.title || `Episódio ${nextEpisode.episode_num}`,
+                streamUrl: nextEpisode.streamUrl,
+                stream_icon: nextEpisode.info?.movie_image || this.currentSeries?.cover,
+                type: 'episode'
+            });
+        } else {
+            player.setNextEpisode(null);
+        }
+    }
+
+    /**
+     * Find next episode in series
+     */
+    findNextEpisode(currentEpisode) {
+        if (!this.currentSeries || !this.currentSeries.episodes) return null;
+
+        const seasons = Object.keys(this.currentSeries.episodes).sort((a, b) => parseInt(a) - parseInt(b));
+
+        for (let i = 0; i < seasons.length; i++) {
+            const seasonNum = seasons[i];
+            const episodes = this.currentSeries.episodes[seasonNum];
+
+            for (let j = 0; j < episodes.length; j++) {
+                if (episodes[j].id === currentEpisode.id) {
+                    // Check if there's a next episode in this season
+                    if (j < episodes.length - 1) {
+                        return episodes[j + 1];
+                    }
+                    // Check if there's a next season
+                    if (i < seasons.length - 1) {
+                        const nextSeasonNum = seasons[i + 1];
+                        const nextSeasonEpisodes = this.currentSeries.episodes[nextSeasonNum];
+                        if (nextSeasonEpisodes && nextSeasonEpisodes.length > 0) {
+                            return nextSeasonEpisodes[0];
+                        }
+                    }
+                    return null;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
