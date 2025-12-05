@@ -24,7 +24,10 @@ class LiveScreen {
      */
     async loadCategories() {
         try {
-            this.categories = await xtream.getLiveCategories();
+            let categories = await xtream.getLiveCategories();
+
+            // Filter adult categories
+            this.categories = await ContentFilter.filterCategories(categories);
             this.renderCategories();
 
             // Load first category
@@ -70,7 +73,10 @@ class LiveScreen {
         this.gridContainer.innerHTML = '<div class="loading-spinner" style="margin:auto"></div>';
 
         try {
-            this.items = await xtream.getLiveStreams(categoryId);
+            let items = await xtream.getLiveStreams(categoryId);
+
+            // Filter adult content
+            this.items = await ContentFilter.filterItems(items);
             this.renderGrid();
         } catch (error) {
             console.error('Failed to load live streams:', error);

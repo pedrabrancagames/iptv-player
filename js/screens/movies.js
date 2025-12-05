@@ -34,7 +34,10 @@ class MoviesScreen {
      */
     async loadCategories() {
         try {
-            this.categories = await xtream.getVodCategories();
+            let categories = await xtream.getVodCategories();
+
+            // Filter adult categories
+            this.categories = await ContentFilter.filterCategories(categories);
             this.renderCategories();
 
             if (this.categories.length > 0) {
@@ -79,7 +82,10 @@ class MoviesScreen {
         this.gridContainer.innerHTML = '<div class="loading-spinner" style="margin:auto"></div>';
 
         try {
-            this.items = await xtream.getVodStreams(categoryId);
+            let items = await xtream.getVodStreams(categoryId);
+
+            // Filter adult content
+            this.items = await ContentFilter.filterItems(items);
 
             // Store in IndexedDB for search
             const itemsWithType = this.items.map(item => ({

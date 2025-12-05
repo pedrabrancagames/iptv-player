@@ -34,7 +34,10 @@ class SeriesScreen {
      */
     async loadCategories() {
         try {
-            this.categories = await xtream.getSeriesCategories();
+            let categories = await xtream.getSeriesCategories();
+
+            // Filter adult categories
+            this.categories = await ContentFilter.filterCategories(categories);
             this.renderCategories();
 
             if (this.categories.length > 0) {
@@ -79,7 +82,10 @@ class SeriesScreen {
         this.gridContainer.innerHTML = '<div class="loading-spinner" style="margin:auto"></div>';
 
         try {
-            this.items = await xtream.getSeriesStreams(categoryId);
+            let items = await xtream.getSeriesStreams(categoryId);
+
+            // Filter adult content
+            this.items = await ContentFilter.filterItems(items);
 
             // Store in IndexedDB for search
             const itemsWithType = this.items.map(item => ({
