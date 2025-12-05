@@ -8,6 +8,7 @@ class ModalManager {
         this.detailModal = document.getElementById('detail-modal');
         this.personModal = document.getElementById('person-modal');
         this.currentModal = null;
+        this.currentTrailers = []; // Store trailers for current item
 
         this.init();
     }
@@ -325,6 +326,9 @@ class ModalManager {
      * Set TMDB info
      */
     setDetailTmdbInfo(tmdbData, iptvItem) {
+        // Store trailers for later use
+        this.currentTrailers = tmdbData.videos || [];
+
         // Update backdrop with high quality image
         if (tmdbData.backdropPath) {
             const backdrop = document.getElementById('detail-backdrop');
@@ -365,6 +369,28 @@ class ModalManager {
 
             const statsEl = document.getElementById('detail-stats');
             statsEl.innerHTML += `<div class="detail-genres" style="margin-top:12px">${genresHtml}</div>`;
+        }
+
+        // Add trailer button if trailers are available
+        if (this.currentTrailers.length > 0) {
+            const actionsEl = document.getElementById('detail-actions');
+            const trailerBtn = document.createElement('button');
+            trailerBtn.className = 'action-btn trailer';
+            trailerBtn.setAttribute('data-focusable', 'true');
+            trailerBtn.id = 'btn-trailer-detail';
+            trailerBtn.innerHTML = '🎬 Trailer';
+
+            // Insert after first button
+            const firstBtn = actionsEl.querySelector('.action-btn');
+            if (firstBtn && firstBtn.nextSibling) {
+                actionsEl.insertBefore(trailerBtn, firstBtn.nextSibling);
+            } else {
+                actionsEl.appendChild(trailerBtn);
+            }
+
+            trailerBtn.addEventListener('click', () => {
+                this.playTrailer();
+            });
         }
 
         // Cast - only if not a series with episodes (which uses detail-cast for seasons)
@@ -608,9 +634,106 @@ class ModalManager {
         this.detailModal.classList.remove('active');
         this.personModal.classList.add('hidden');
         this.personModal.classList.remove('active');
+        this.closeTrailer();
 
         navigation.setModalOpen(false);
         this.currentModal = null;
+    }
+
+    /**
+     * Play trailer in embedded YouTube player
+     */
+    playTrailer() {
+        if (this.currentTrailers.length === 0) {
+            toast.info('Trailer', 'Nenhum trailer disponível');
+            return;
+        }
+
+        const trailer = this.currentTrailers[0]; // Play first trailer
+        const youtubeKey = trailer.key;
+
+        // Create trailer modal overlay
+        const trailerModal = document.createElement('div');
+        trailerModal.id = 'trailer-modal';
+        trailerModal.className = 'trailer-modal';
+        trailerModal.innerHTML = `
+            <div class="trailer-backdrop"></div>
+            <div class="trailer-container">
+                <button class="trailer-close" id="trailer-close" data-focusable="true">✕</button>
+                <div class="trailer-title">${trailer.name || 'Trailer'}</div>
+                <div class="trailer-player">
+                    <iframe 
+                        src="https://www.youtube.com/embed/${youtubeKey}?autoplay=1&rel=0&modestbranding=1"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                ${this.currentTrailers.length > 1 ? `
+                    <div class="trailer-list">
+                        ${this.currentTrailers.map((t, i) => `
+                            <button class="trailer-list-item ${i === 0 ? 'active' : ''}" 
+                                    data-key="${t.key}" 
+                                    data-name="${t.name}"
+                                    data-focusable="true">
+                                ${t.type}: ${t.name}
+                            </button>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+
+        document.body.appendChild(trailerModal);
+
+        // Add close events
+        const closeBtn = document.getElementById('trailer-close');
+        const backdrop = trailerModal.querySelector('.trailer-backdrop');
+
+        closeBtn.addEventListener('click', () => this.closeTrailer());
+        backdrop.addEventListener('click', () => this.closeTrailer());
+
+        // Handle switching between trailers
+        trailerModal.querySelectorAll('.trailer-list-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const key = item.dataset.key;
+                const name = item.dataset.name;
+                const iframe = trailerModal.querySelector('iframe');
+                iframe.src = `https://www.youtube.com/embed/${key}?autoplay=1&rel=0&modestbranding=1`;
+                trailerModal.querySelector('.trailer-title').textContent = name || 'Trailer';
+
+                // Update active state
+                trailerModal.querySelectorAll('.trailer-list-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+        // Handle ESC key
+        const handleEsc = (e) => {
+            if (e.key === 'Escape' || e.key === 'Backspace' || e.keyCode === 461) {
+                this.closeTrailer();
+                document.removeEventListener('keydown', handleEsc);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+
+        // Focus close button
+        setTimeout(() => closeBtn.focus(), 100);
+    }
+
+    /**
+     * Close trailer modal
+     */
+    closeTrailer() {
+        const trailerModal = document.getElementById('trailer-modal');
+        if (trailerModal) {
+            // Stop video by removing iframe
+            const iframe = trailerModal.querySelector('iframe');
+            if (iframe) {
+                iframe.src = '';
+            }
+            trailerModal.remove();
+        }
     }
 }
 
