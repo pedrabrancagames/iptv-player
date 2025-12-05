@@ -1360,3 +1360,30 @@
     outline: none;
     box-shadow: var(--focus-ring);
 }
+
+/* Settings Select */
+.settings-select {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    font-family: inherit;
+    min-width: 200px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.settings-select:hover,
+.settings-select:focus {
+    background: var(--bg-card-hover);
+    border-color: var(--accent-primary);
+    outline: none;
+}
+
+.settings-select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: var(--space-sm);
+}

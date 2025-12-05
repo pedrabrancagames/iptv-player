@@ -11,6 +11,7 @@ class HomeScreen {
         this.heroIndex = 0;
         this.heroInterval = null;
         this.heroItems = [];
+        this.heroAutoRotate = true;
         this.loadedItems = new Map(); // Store loaded items by ID
     }
 
@@ -19,6 +20,74 @@ class HomeScreen {
      */
     async init() {
         await this.render();
+    }
+
+    /**
+     * Get user settings
+     */
+    async getUserSettings() {
+        try {
+            const stored = await storage.get('settings', 'user_settings');
+            return stored?.value || {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    /**
+     * Select hero items based on criteria
+     */
+    selectHeroItems(movies, series, favorites, criteria, contentType) {
+        // Filter by content type
+        let items = [];
+        if (contentType === 'movies') {
+            items = [...movies];
+        } else if (contentType === 'series') {
+            items = [...series];
+        } else {
+            items = [...movies, ...series];
+        }
+
+        // Apply criteria
+        switch (criteria) {
+            case 'favorites':
+                // Use favorites if available
+                items = favorites.length > 0 ? [...favorites] : items;
+                break;
+
+            case 'year':
+                // Sort by year (newest first)
+                items.sort((a, b) => {
+                    const yearA = parseInt(a.releasedate || a.year || 0);
+                    const yearB = parseInt(b.releasedate || b.year || 0);
+                    return yearB - yearA;
+                });
+                break;
+
+            case 'random':
+                // Shuffle randomly
+                items = items.sort(() => Math.random() - 0.5);
+                break;
+
+            case 'rating':
+                // Sort by rating
+                items.sort((a, b) => {
+                    const ratingA = parseFloat(a.rating || 0);
+                    const ratingB = parseFloat(b.rating || 0);
+                    return ratingB - ratingA;
+                });
+                break;
+
+            case 'recent':
+            default:
+                // Keep original order (recent)
+                break;
+        }
+
+        // Filter items with images and limit to 5
+        return items
+            .filter(item => item.stream_icon || item.cover)
+            .slice(0, 5);
     }
 
     /**
@@ -108,13 +177,24 @@ class HomeScreen {
                 }
             });
 
-            // Select hero items (random featured content)
-            let heroItemsCandidates = [...featuredMovies.slice(0, 5), ...featuredSeries.slice(0, 5)]
-                .filter(item => item.stream_icon || item.cover)
-                .slice(0, 5);
+            // Get user settings for hero
+            const userSettings = await this.getUserSettings();
+            const heroCriteria = userSettings.heroCriteria || 'recent';
+            const heroContentType = userSettings.heroContentType || 'all';
+            const heroAutoRotate = userSettings.heroAutoRotate !== false;
+
+            // Select hero items based on settings
+            let heroItemsCandidates = this.selectHeroItems(
+                featuredMovies,
+                featuredSeries,
+                recentFavorites,
+                heroCriteria,
+                heroContentType
+            );
 
             // Try to enrich hero items with TMDB backdrop images
             this.heroItems = await this.enrichHeroItems(heroItemsCandidates);
+            this.heroAutoRotate = heroAutoRotate;
 
             // Build HTML
             let html = '';
@@ -237,8 +317,8 @@ class HomeScreen {
             this.container.innerHTML = html;
             this.bindEvents();
 
-            // Start hero auto-rotation
-            if (this.heroItems.length > 1) {
+            // Start hero auto-rotation if enabled
+            if (this.heroItems.length > 1 && this.heroAutoRotate) {
                 this.startHeroRotation(this.heroItems);
             }
 

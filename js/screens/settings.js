@@ -236,6 +236,33 @@ class SettingsScreen {
                 </div>
             </div>
 
+            <!-- Hero Banner Settings -->
+            <div class="settings-group">
+                <h3 class="settings-group-title">🎬 Banner Principal (Hero)</h3>
+                <div class="settings-item">
+                    <span class="settings-label">Critério de seleção</span>
+                    <select id="hero-criteria" class="settings-select" data-focusable="true">
+                        <option value="recent" ${this.settings.heroCriteria === 'recent' ? 'selected' : ''}>Adicionado Recentemente</option>
+                        <option value="favorites" ${this.settings.heroCriteria === 'favorites' ? 'selected' : ''}>Favoritos</option>
+                        <option value="year" ${this.settings.heroCriteria === 'year' ? 'selected' : ''}>Por Ano de Lançamento</option>
+                        <option value="random" ${this.settings.heroCriteria === 'random' ? 'selected' : ''}>Aleatório</option>
+                        <option value="rating" ${this.settings.heroCriteria === 'rating' ? 'selected' : ''}>Melhor Avaliados</option>
+                    </select>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Tipo de conteúdo</span>
+                    <select id="hero-content-type" class="settings-select" data-focusable="true">
+                        <option value="all" ${this.settings.heroContentType === 'all' ? 'selected' : ''}>Filmes e Séries</option>
+                        <option value="movies" ${this.settings.heroContentType === 'movies' ? 'selected' : ''}>Apenas Filmes</option>
+                        <option value="series" ${this.settings.heroContentType === 'series' ? 'selected' : ''}>Apenas Séries</option>
+                    </select>
+                </div>
+                <div class="settings-item" data-focusable="true" data-setting="heroAutoRotate" tabindex="0">
+                    <span class="settings-label">Rotação automática</span>
+                    <div class="toggle-switch ${this.settings.heroAutoRotate !== false ? 'active' : ''}"></div>
+                </div>
+            </div>
+
             <!-- Storage -->
             <div class="settings-group">
                 <h3 class="settings-group-title">💾 Armazenamento</h3>
@@ -328,6 +355,20 @@ class SettingsScreen {
 
                 this.saveSettings();
             });
+        });
+
+        // Hero criteria select
+        document.getElementById('hero-criteria')?.addEventListener('change', (e) => {
+            this.settings.heroCriteria = e.target.value;
+            this.saveSettings();
+            toast.info('Configuração salva', 'Recarregue a Home para aplicar');
+        });
+
+        // Hero content type select
+        document.getElementById('hero-content-type')?.addEventListener('change', (e) => {
+            this.settings.heroContentType = e.target.value;
+            this.saveSettings();
+            toast.info('Configuração salva', 'Recarregue a Home para aplicar');
         });
 
         // Clear cache

@@ -73,6 +73,7 @@
 .hero-actions {
     display: flex;
     gap: var(--space-md);
+    margin-bottom: var(--space-lg);
 }
 
 .hero-btn {
