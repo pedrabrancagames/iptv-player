@@ -34,6 +34,19 @@ class ModalManager {
     async showDetail(item, tmdbData = null) {
         this.currentModal = this.detailModal;
 
+        // If it's a series without episodes loaded, fetch them
+        if (item.type === 'series' && !item.episodes && item.series_id) {
+            try {
+                const seriesInfo = await xtream.getSeriesInfo(item.series_id);
+                if (seriesInfo && seriesInfo.episodes) {
+                    item.episodes = seriesInfo.episodes;
+                    item.info = seriesInfo.info;
+                }
+            } catch (error) {
+                console.warn('Failed to load series episodes:', error);
+            }
+        }
+
         // Set initial data from IPTV item
         this.setDetailBasicInfo(item);
 

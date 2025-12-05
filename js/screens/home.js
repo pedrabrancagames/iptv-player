@@ -109,9 +109,12 @@ class HomeScreen {
             });
 
             // Select hero items (random featured content)
-            this.heroItems = [...featuredMovies.slice(0, 5), ...featuredSeries.slice(0, 5)]
+            let heroItemsCandidates = [...featuredMovies.slice(0, 5), ...featuredSeries.slice(0, 5)]
                 .filter(item => item.stream_icon || item.cover)
                 .slice(0, 5);
+
+            // Try to enrich hero items with TMDB backdrop images
+            this.heroItems = await this.enrichHeroItems(heroItemsCandidates);
 
             // Build HTML
             let html = '';
@@ -256,13 +259,14 @@ class HomeScreen {
      */
     renderHeroBanner(items) {
         const firstItem = items[0];
-        const poster = firstItem.stream_icon || firstItem.cover;
+        // Prefer backdrop (16:9) for hero, fallback to poster
+        const backdrop = firstItem.backdropPath || firstItem.stream_icon || firstItem.cover;
         const title = firstItem.name || firstItem.title;
-        const plot = firstItem.plot || firstItem.overview || '';
+        const plot = firstItem.overview || firstItem.plot || '';
 
         return `
             <div class="hero-banner" id="hero-banner">
-                <div class="hero-backdrop" style="background-image: url('${poster}')"></div>
+                <div class="hero-backdrop" style="background-image: url('${backdrop}')"></div>
                 <div class="hero-gradient"></div>
                 <div class="hero-content">
                     <h1 class="hero-title" id="hero-title">${title}</h1>
@@ -329,7 +333,7 @@ class HomeScreen {
         const banner = document.getElementById('hero-banner');
         if (!banner) return;
 
-        const backdrop = banner.querySelector('.hero-backdrop');
+        const backdropEl = banner.querySelector('.hero-backdrop');
         const title = document.getElementById('hero-title');
         const description = document.getElementById('hero-description');
         const playBtn = document.getElementById('hero-play');
@@ -339,10 +343,11 @@ class HomeScreen {
         banner.classList.add('transitioning');
 
         setTimeout(() => {
-            const poster = item.stream_icon || item.cover;
-            const plot = item.plot || item.overview || '';
+            // Prefer backdrop (16:9) over poster
+            const backdrop = item.backdropPath || item.stream_icon || item.cover;
+            const plot = item.overview || item.plot || '';
 
-            backdrop.style.backgroundImage = `url('${poster}')`;
+            backdropEl.style.backgroundImage = `url('${backdrop}')`;
             title.textContent = item.name || item.title;
             description.textContent = plot.substring(0, 200) + (plot.length > 200 ? '...' : '');
             playBtn.dataset.itemIndex = index;
@@ -518,6 +523,45 @@ class HomeScreen {
         if (this.heroInterval) {
             clearInterval(this.heroInterval);
         }
+    }
+
+    /**
+     * Enrich hero items with TMDB backdrop images
+     */
+    async enrichHeroItems(items) {
+        const enrichedItems = await Promise.all(items.map(async (item) => {
+            try {
+                const type = item.type === 'movie' ? 'movie' : 'tv';
+                const searchResult = await tmdb.matchContent(item.name || item.title, type);
+
+                if (searchResult) {
+                    let details;
+                    if (type === 'movie') {
+                        details = await tmdb.getMovieDetails(searchResult.tmdbId);
+                    } else {
+                        details = await tmdb.getTvDetails(searchResult.tmdbId);
+                    }
+
+                    if (details) {
+                        return {
+                            ...item,
+                            backdropPath: details.backdropPath,
+                            posterPath: details.posterPath,
+                            overview: details.overview || item.plot,
+                            tmdbData: details
+                        };
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not enrich item:', item.name, e);
+            }
+            return item;
+        }));
+
+        // Filter items that have backdrop images, prefer those with TMDB backdrops
+        return enrichedItems.filter(item =>
+            item.backdropPath || item.stream_icon || item.cover
+        );
     }
 }
 
