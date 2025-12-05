@@ -10,6 +10,8 @@ class HomeScreen {
         this.recentItems = [];
         this.heroIndex = 0;
         this.heroInterval = null;
+        this.heroItems = [];
+        this.loadedItems = new Map(); // Store loaded items by ID
     }
 
     /**
@@ -98,8 +100,16 @@ class HomeScreen {
                 console.warn('Could not load series:', e);
             }
 
+            // Store all loaded items in the Map for quick lookup
+            this.loadedItems.clear();
+            [...continueWatching, ...recentFavorites, ...featuredMovies, ...featuredSeries].forEach(item => {
+                if (item && item.id) {
+                    this.loadedItems.set(String(item.id), item);
+                }
+            });
+
             // Select hero items (random featured content)
-            const heroItems = [...featuredMovies.slice(0, 5), ...featuredSeries.slice(0, 5)]
+            this.heroItems = [...featuredMovies.slice(0, 5), ...featuredSeries.slice(0, 5)]
                 .filter(item => item.stream_icon || item.cover)
                 .slice(0, 5);
 
@@ -107,8 +117,8 @@ class HomeScreen {
             let html = '';
 
             // Hero Banner
-            if (heroItems.length > 0) {
-                html += this.renderHeroBanner(heroItems);
+            if (this.heroItems.length > 0) {
+                html += this.renderHeroBanner(this.heroItems);
             }
 
             // Quick Stats
@@ -209,7 +219,7 @@ class HomeScreen {
             }
 
             // Empty state
-            if (!heroItems.length && !continueWatching.length && !featuredMovies.length) {
+            if (!this.heroItems.length && !continueWatching.length && !featuredMovies.length) {
                 html = `
                     <div class="empty-state">
                         <div class="empty-icon">📺</div>
@@ -225,8 +235,8 @@ class HomeScreen {
             this.bindEvents();
 
             // Start hero auto-rotation
-            if (heroItems.length > 1) {
-                this.startHeroRotation(heroItems);
+            if (this.heroItems.length > 1) {
+                this.startHeroRotation(this.heroItems);
             }
 
         } catch (error) {
@@ -471,7 +481,14 @@ class HomeScreen {
      * Find item by ID
      */
     async findItem(id) {
-        // Check history first
+        const stringId = String(id);
+
+        // Check loaded items first (in-memory)
+        if (this.loadedItems.has(stringId)) {
+            return this.loadedItems.get(stringId);
+        }
+
+        // Check history
         let item = await storage.get('history', id);
         if (item) return item;
 
