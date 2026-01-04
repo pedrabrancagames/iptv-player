@@ -213,14 +213,16 @@ class SearchScreen {
      * Render local content card
      */
     renderCard(item, type) {
-        const poster = item.stream_icon || item.cover || item.posterPath;
+        const posterUrl = item.stream_icon || item.cover || item.posterPath;
+        const poster = ImageUtils.getSecureImageUrl(posterUrl);
         const title = item.name || item.title;
+        const placeholder = ImageUtils.getPlaceholder(type);
 
         return `
             <div class="content-card" data-focusable="true" data-item-id="${item.id}" data-type="${type}" tabindex="0">
                 <div class="card-poster">
                     ${poster
-                ? `<img src="${poster}" alt="${title}" loading="lazy">`
+                ? `<img src="${poster}" alt="${title}" loading="lazy" onerror="this.src='${placeholder}'">`
                 : `<div class="card-poster-placeholder">${type === 'live' ? '📺' : '🎬'}</div>`
             }
                 </div>

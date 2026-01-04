@@ -90,7 +90,8 @@ class ModalManager {
      */
     setDetailBasicInfo(item) {
         const title = item.name || item.title || 'Sem título';
-        const poster = item.stream_icon || item.cover || item.posterPath;
+        const posterUrl = item.stream_icon || item.cover || item.posterPath;
+        const poster = ImageUtils.getSecureImageUrl(posterUrl);
 
         document.getElementById('detail-title').textContent = title;
         document.getElementById('detail-overview').textContent = item.plot || item.overview || 'Sem descrição disponível.';
@@ -229,13 +230,15 @@ class ModalManager {
 
         container.innerHTML = `
             <div class="episodes-list">
-                ${episodes.map(ep => `
+                ${episodes.map(ep => {
+            const thumbUrl = ImageUtils.getSecureImageUrl(ep.info?.movie_image);
+            return `
                     <div class="episode-card" data-focusable="true" data-episode-id="${ep.id}" tabindex="0">
                         <div class="episode-thumbnail">
                             ${ep.info?.movie_image
-                ? `<img src="${ep.info.movie_image}" alt="Episódio ${ep.episode_num}">`
-                : `<div class="episode-thumb-placeholder">▶</div>`
-            }
+                    ? `<img src="${thumbUrl}" alt="Episódio ${ep.episode_num}">`
+                    : `<div class="episode-thumb-placeholder">▶</div>`
+                }
                             <div class="episode-number">E${ep.episode_num}</div>
                         </div>
                         <div class="episode-info">
@@ -245,7 +248,7 @@ class ModalManager {
                         </div>
                         <button class="episode-play-btn" data-focusable="true">▶</button>
                     </div>
-                `).join('')}
+                `}).join('')}
             </div>
         `;
 
@@ -277,7 +280,8 @@ class ModalManager {
         // Update backdrop if available
         if (info.movie_image) {
             const backdrop = document.getElementById('detail-backdrop');
-            backdrop.style.backgroundImage = `url(${info.movie_image})`;
+            const backdropUrl = ImageUtils.getSecureImageUrl(info.movie_image);
+            backdrop.style.backgroundImage = `url(${backdropUrl})`;
         }
 
         // Update stats

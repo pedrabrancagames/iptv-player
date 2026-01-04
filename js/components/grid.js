@@ -181,15 +181,17 @@ class VirtualGrid {
      * Default item renderer
      */
     defaultRenderItem(item) {
-        const poster = item.stream_icon || item.cover || item.posterPath;
+        const posterUrl = item.stream_icon || item.cover || item.posterPath;
+        const poster = ImageUtils.getSecureImageUrl(posterUrl);
         const title = item.name || item.title;
         const rating = item.rating || item.vote_average;
+        const placeholder = ImageUtils.getPlaceholder(item.type || 'movie');
 
         return `
             <div class="card-poster">
                 ${poster
-                ? `<img src="${poster}" alt="${title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=card-poster-placeholder>🎬</div>'">`
-                : '<div class="card-poster-placeholder">🎬</div>'
+                ? `<img src="${poster}" alt="${title}" loading="lazy" onerror="this.src='${placeholder}'">`
+                : `<div class="card-poster-placeholder">🎬</div>`
             }
                 ${rating ? `<div class="card-rating">★ ${parseFloat(rating).toFixed(1)}</div>` : ''}
                 <div class="card-overlay">
@@ -322,15 +324,17 @@ class HorizontalRow {
      * Default item renderer
      */
     defaultRenderItem(item) {
-        const poster = item.stream_icon || item.cover || item.posterPath;
+        const posterUrl = item.stream_icon || item.cover || item.posterPath;
+        const poster = ImageUtils.getSecureImageUrl(posterUrl);
         const title = item.name || item.title;
         const rating = item.rating || item.vote_average;
+        const placeholder = ImageUtils.getPlaceholder(item.type || 'movie');
 
         return `
             <div class="card-poster">
                 ${poster
-                ? `<img src="${poster}" alt="${title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=card-poster-placeholder>🎬</div>'">`
-                : '<div class="card-poster-placeholder">🎬</div>'
+                ? `<img src="${poster}" alt="${title}" loading="lazy" onerror="this.src='${placeholder}'">`
+                : `<div class="card-poster-placeholder">🎬</div>`
             }
                 ${rating ? `<div class="card-rating">★ ${parseFloat(rating).toFixed(1)}</div>` : ''}
             </div>

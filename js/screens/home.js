@@ -340,7 +340,8 @@ class HomeScreen {
     renderHeroBanner(items) {
         const firstItem = items[0];
         // Prefer backdrop (16:9) for hero, fallback to poster
-        const backdrop = firstItem.backdropPath || firstItem.stream_icon || firstItem.cover;
+        const backdropUrl = firstItem.backdropPath || firstItem.stream_icon || firstItem.cover;
+        const backdrop = ImageUtils.getSecureImageUrl(backdropUrl);
         const title = firstItem.name || firstItem.title;
         const plot = firstItem.overview || firstItem.plot || '';
 
@@ -424,7 +425,8 @@ class HomeScreen {
 
         setTimeout(() => {
             // Prefer backdrop (16:9) over poster
-            const backdrop = item.backdropPath || item.stream_icon || item.cover;
+            const backdropUrl = item.backdropPath || item.stream_icon || item.cover;
+            const backdrop = ImageUtils.getSecureImageUrl(backdropUrl);
             const plot = item.overview || item.plot || '';
 
             backdropEl.style.backgroundImage = `url('${backdrop}')`;
@@ -448,14 +450,16 @@ class HomeScreen {
      */
     renderContinueCard(item) {
         const progress = (item.progress * 100).toFixed(0);
-        const poster = item.stream_icon || item.cover || item.posterPath;
+        const posterUrl = item.stream_icon || item.cover || item.posterPath;
+        const poster = ImageUtils.getSecureImageUrl(posterUrl);
         const title = item.name || item.title;
+        const placeholder = ImageUtils.getPlaceholder(item.type || 'movie');
 
         return `
             <div class="continue-card" data-focusable="true" data-item-id="${item.id}" tabindex="0">
                 <div class="continue-thumbnail-wrapper">
                     ${poster
-                ? `<img class="continue-thumbnail" src="${poster}" alt="${title}">`
+                ? `<img class="continue-thumbnail" src="${poster}" alt="${title}" onerror="this.src='${placeholder}'">`
                 : '<div class="continue-thumbnail placeholder">🎬</div>'
             }
                     <div class="continue-play-icon">▶</div>
@@ -477,16 +481,18 @@ class HomeScreen {
      * Render content card
      */
     renderContentCard(item) {
-        const poster = item.stream_icon || item.cover || item.posterPath;
+        const posterUrl = item.stream_icon || item.cover || item.posterPath;
+        const poster = ImageUtils.getSecureImageUrl(posterUrl);
         const title = item.name || item.title;
         const rating = item.rating || item.vote_average;
         const year = item.releasedate || item.year;
+        const placeholder = ImageUtils.getPlaceholder(item.type || 'movie');
 
         return `
             <div class="content-card" data-focusable="true" data-item-id="${item.id}" tabindex="0">
                 <div class="card-poster">
                     ${poster
-                ? `<img src="${poster}" alt="${title}" loading="lazy">`
+                ? `<img src="${poster}" alt="${title}" loading="lazy" onerror="this.src='${placeholder}'">`
                 : '<div class="card-poster-placeholder">🎬</div>'
             }
                     ${rating ? `<div class="card-rating">★ ${parseFloat(rating).toFixed(1)}</div>` : ''}

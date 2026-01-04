@@ -346,15 +346,17 @@ class SeriesScreen {
         }
 
         this.gridContainer.innerHTML = this.filteredItems.slice(0, CONFIG.memory.maxItemsInMemory).map(item => {
-            const poster = item.cover;
+            const posterUrl = item.cover;
+            const poster = ImageUtils.getSecureImageUrl(posterUrl);
             const rating = item.rating;
             const year = item.year || item.releasedate?.substring(0, 4);
+            const placeholder = ImageUtils.getPlaceholder('series');
 
             return `
                 <div class="content-card" data-focusable="true" data-item-id="${item.id}" tabindex="0">
                     <div class="card-poster">
                         ${poster
-                    ? `<img src="${poster}" alt="${item.name}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=card-poster-placeholder>📺</div>'">`
+                    ? `<img src="${poster}" alt="${item.name}" loading="lazy" onerror="this.src='${placeholder}'">`
                     : '<div class="card-poster-placeholder">📺</div>'
                 }
                         ${rating ? `<div class="card-rating">★ ${parseFloat(rating).toFixed(1)}</div>` : ''}

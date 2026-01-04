@@ -98,20 +98,23 @@ class LiveScreen {
             return;
         }
 
-        this.gridContainer.innerHTML = this.items.slice(0, CONFIG.memory.maxItemsInMemory).map(item => `
+        this.gridContainer.innerHTML = this.items.slice(0, CONFIG.memory.maxItemsInMemory).map(item => {
+            const logoUrl = ImageUtils.getSecureImageUrl(item.stream_icon);
+            const placeholder = ImageUtils.getPlaceholder('live');
+            return `
             <div class="channel-card" data-focusable="true" data-item-id="${item.id}" tabindex="0">
                 <div class="channel-logo">
                     ${item.stream_icon
-                ? `<img src="${item.stream_icon}" alt="${item.name}" onerror="this.parentElement.innerHTML='📺'">`
-                : '📺'
-            }
+                    ? `<img src="${logoUrl}" alt="${item.name}" onerror="this.src='${placeholder}'">`
+                    : '📺'
+                }
                 </div>
                 <div class="channel-info">
                     <div class="channel-name">${item.name}</div>
                     <div class="channel-status">Ao vivo</div>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
 
         this.gridContainer.querySelectorAll('.channel-card').forEach(card => {
             card.addEventListener('click', () => {
