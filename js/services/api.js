@@ -8,6 +8,25 @@ class ApiService {
         this.requestQueue = [];
         this.isProcessing = false;
         this.rateLimitDelay = 100; // ms between requests
+        this.isSecureContext = window.location.protocol === 'https:';
+        this.proxyUrl = '/api/proxy';
+    }
+
+    /**
+     * Check if URL needs to be proxied (HTTP URL in HTTPS context)
+     */
+    needsProxy(url) {
+        return this.isSecureContext && url.startsWith('http://');
+    }
+
+    /**
+     * Get the proxied URL for HTTP requests
+     */
+    getProxiedUrl(url) {
+        if (this.needsProxy(url)) {
+            return `${this.proxyUrl}?url=${encodeURIComponent(url)}`;
+        }
+        return url;
     }
 
     /**
@@ -67,8 +86,15 @@ class ApiService {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+        // Use proxy for HTTP requests in HTTPS context
+        const requestUrl = this.getProxiedUrl(url);
+
+        if (this.needsProxy(url)) {
+            console.log('Using proxy for HTTP request:', url);
+        }
+
         try {
-            const response = await fetch(url, {
+            const response = await fetch(requestUrl, {
                 signal: controller.signal,
                 headers: {
                     'Accept': 'application/json'
