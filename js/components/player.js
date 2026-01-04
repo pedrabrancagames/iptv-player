@@ -93,6 +93,7 @@ class VideoPlayer {
      */
     async play(item) {
         this.currentItem = item;
+        this.retriedDirectly = false;
 
         // Destroy previous HLS instance if exists
         if (this.hls) {
@@ -543,17 +544,50 @@ class VideoPlayer {
     }
 
     onError(event) {
-        console.error('Video error:', this.video.error);
+        const error = this.video.error;
+        console.error('Video error:', error);
+
+        // Fallback logic: If we are using a proxy and it fails, try direct connection
+        const currentSrc = this.video.src;
+        if (currentSrc && currentSrc.includes('/api/stream') && !this.retriedDirectly) {
+            console.log('Proxy failed, trying direct connection...');
+
+            // Extract original URL from proxy param
+            try {
+                const urlParam = new URL(currentSrc).searchParams.get('url');
+                if (urlParam) {
+                    const originalUrl = decodeURIComponent(urlParam);
+                    console.log('Retrying with original URL:', originalUrl);
+
+                    this.retriedDirectly = true;
+                    this.video.src = originalUrl;
+                    this.video.play().catch(e => {
+                        console.error('Direct playback failed:', e);
+                        // If direct playback fails (likely mixed content), show specific error
+                        if (e.name === 'NotSupportedError' || e.message.includes('supported source')) {
+                            toast.error('Erro de Segurança', 'Navegador bloqueou conteúdo misto (HTTP). Tente rodar localmente.');
+                        }
+                    });
+
+                    toast.info('Tentando conexão direta...', 'O proxy falhou, conectando diretamente ao servidor.');
+                    return;
+                }
+            } catch (e) {
+                console.error('Error parsing proxy URL:', e);
+            }
+        }
 
         const errorMessages = {
             1: 'Carregamento abortado',
             2: 'Erro de rede',
             3: 'Erro de decodificação',
-            4: 'Formato não suportado'
+            4: 'Formato não suportado (Provável bloqueio do servidor)'
         };
 
-        const code = this.video.error?.code || 0;
-        toast.error('Erro de vídeo', errorMessages[code] || 'Erro desconhecido');
+        const code = error?.code || 0;
+        const msg = errorMessages[code] || 'Erro desconhecido';
+
+        toast.error('Erro de reprodução', msg);
     }
 
     onWaiting() {
