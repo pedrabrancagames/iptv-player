@@ -25,12 +25,22 @@ export default async function handler(req, res) {
     try {
         // Decode the URL
         const targetUrl = decodeURIComponent(url);
+        let urlObj;
+        try {
+            urlObj = new URL(targetUrl);
+        } catch (e) {
+            return res.status(400).json({ error: 'Invalid URL' });
+        }
 
         console.log('Streaming:', targetUrl);
 
         // Build headers for the upstream request
+        // Mimic a real browser or VLC to avoid 403 Forbidden
         const headers = {
-            'User-Agent': 'Mozilla/5.0 (compatible; IPTV-Player/1.0)',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+            'Connection': 'keep-alive',
+            'Referer': urlObj.origin + '/'
         };
 
         // Forward Range header for seeking support
@@ -41,14 +51,19 @@ export default async function handler(req, res) {
         // Make the request to the video URL
         const response = await fetch(targetUrl, {
             method: req.method,
-            headers
+            headers,
+            redirect: 'follow'
         });
 
         if (!response.ok && response.status !== 206) {
             console.error('Upstream error:', response.status, response.statusText);
-            // Don't forward the error directly as it might break the player
-            // But if it's 404 upstream, we should return 404
-            return res.status(response.status).send(`Upstream error: ${response.status}`);
+            // Return 502 instead of upstream error status to distinguish from Vercel errors
+            return res.status(502).json({
+                error: 'Upstream Error',
+                upstreamStatus: response.status,
+                upstreamStatusText: response.statusText,
+                url: targetUrl
+            });
         }
 
         // Forward content headers
