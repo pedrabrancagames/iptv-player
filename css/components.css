@@ -1521,3 +1521,34 @@
     color: white;
     outline: none;
 }
+
+/* Overrides for Phosphor Icons & Modern UI */
+.card-play-btn {
+    width: 60px !important;
+    height: 60px !important;
+    font-size: 32px !important;
+}
+.card-play-btn i, .control-btn i, .nav-item i {
+    display: block; 
+}
+.player-back {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+}
+.control-btn {
+   font-size: 28px !important;
+}
+.control-btn.play-pause {
+    font-size: 32px !important; 
+    width: 72px !important;
+    height: 72px !important;
+}
+.toast-icon {
+    font-size: 24px !important;
+    display: flex;
+    align-items: center;
+}
+

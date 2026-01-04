@@ -332,16 +332,20 @@ class VideoPlayer {
      * Update play/pause button
      */
     updatePlayPauseButton() {
-        const btn = document.getElementById('btn-play-pause');
-        btn.textContent = this.isPlaying ? '⏸' : '▶';
+        const btnIcon = document.querySelector('#btn-play-pause i');
+        if (btnIcon) {
+            btnIcon.className = this.isPlaying ? 'ph-fill ph-pause' : 'ph-fill ph-play';
+        }
     }
 
     /**
      * Update volume UI
      */
     updateVolumeUI() {
-        const muteBtn = document.getElementById('btn-mute');
-        muteBtn.textContent = this.isMuted || this.volume === 0 ? '🔇' : '🔊';
+        const muteBtnIcon = document.querySelector('#btn-mute i');
+        if (muteBtnIcon) {
+            muteBtnIcon.className = this.isMuted || this.volume === 0 ? 'ph-fill ph-speaker-slash' : 'ph-fill ph-speaker-high';
+        }
         this.volumeFilled.style.width = `${this.isMuted ? 0 : this.volume * 100}%`;
     }
 
@@ -475,7 +479,7 @@ class VideoPlayer {
                 <div class="auto-play-thumbnail">
                     ${this.nextEpisode.stream_icon || this.nextEpisode.cover
                 ? `<img src="${this.nextEpisode.stream_icon || this.nextEpisode.cover}" alt="Next">`
-                : '<div class="auto-play-placeholder">▶</div>'
+                : '<div class="auto-play-placeholder"><i class="ph-fill ph-play-circle"></i></div>'
             }
                 </div>
                 <div class="auto-play-info">
@@ -485,10 +489,10 @@ class VideoPlayer {
                 </div>
                 <div class="auto-play-actions">
                     <button class="auto-play-btn primary" id="auto-play-now" data-focusable="true">
-                        ▶ Reproduzir Agora
+                        <i class="ph-fill ph-play"></i> Reproduzir Agora
                     </button>
                     <button class="auto-play-btn secondary" id="auto-play-cancel" data-focusable="true">
-                        ✕ Cancelar
+                        <i class="ph-fill ph-x"></i> Cancelar
                     </button>
                 </div>
             </div>
