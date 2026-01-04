@@ -4,6 +4,7 @@
     "description": "IPTV Player para LG webOS com integração TMDB",
     "scripts": {
         "dev": "http-server -p 8080 -c-1",
+        "start": "node server.js",
         "webos:package": "ares-package .",
         "webos:deploy": "ares-install com.iptv.player_1.0.0_all.ipk",
         "webos:launch": "ares-launch com.iptv.player",
@@ -20,5 +21,9 @@
         "streaming"
     ],
     "author": "",
-    "license": "MIT"
+    "license": "MIT",
+    "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^5.2.1"
+    }
 }
