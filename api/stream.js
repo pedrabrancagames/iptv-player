@@ -1,92 +1,100 @@
 /**
  * Vercel Serverless Function - Video Stream Proxy
  * Proxies HTTP video streams to avoid Mixed Content errors
- * Uses streaming to minimize memory usage
  */
 
-export const config = {
-    runtime: 'edge',
-};
+export default async function handler(req, res) {
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
+        res.setHeader('Access-Control-Max-Age', '86400');
+        return res.status(200).end();
+    }
 
-export default async function handler(request) {
-    const url = new URL(request.url);
-    const videoUrl = url.searchParams.get('url');
+    const { url } = req.query;
 
-    if (!videoUrl) {
-        return new Response(JSON.stringify({ error: 'URL parameter is required' }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' }
-        });
+    if (!url) {
+        return res.status(400).json({ error: 'URL parameter is required' });
     }
 
     try {
         // Decode the URL
-        const targetUrl = decodeURIComponent(videoUrl);
+        const targetUrl = decodeURIComponent(url);
 
-        // Get range header for seeking support
-        const rangeHeader = request.headers.get('range');
+        console.log('Streaming:', targetUrl);
 
         // Build headers for the upstream request
         const headers = {
             'User-Agent': 'Mozilla/5.0 (compatible; IPTV-Player/1.0)',
         };
 
-        if (rangeHeader) {
-            headers['Range'] = rangeHeader;
+        // Forward Range header for seeking support
+        if (req.headers.range) {
+            headers['Range'] = req.headers.range;
         }
 
         // Make the request to the video URL
         const response = await fetch(targetUrl, {
-            method: 'GET',
+            method: req.method,
             headers
         });
 
         if (!response.ok && response.status !== 206) {
-            return new Response(`Upstream error: ${response.status}`, {
-                status: response.status
-            });
+            console.error('Upstream error:', response.status, response.statusText);
+            return res.status(response.status).send(`Upstream error: ${response.status}`);
         }
 
-        // Get content info from response
-        const contentType = response.headers.get('content-type') || 'video/mp4';
+        // Set response headers
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges');
+
+        // Forward content headers
+        const contentType = response.headers.get('content-type');
         const contentLength = response.headers.get('content-length');
         const contentRange = response.headers.get('content-range');
         const acceptRanges = response.headers.get('accept-ranges');
 
-        // Build response headers
-        const responseHeaders = new Headers({
-            'Content-Type': contentType,
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-            'Access-Control-Allow-Headers': 'Range, Content-Type',
-            'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges',
-            'Cache-Control': 'public, max-age=3600',
-        });
+        if (contentType) res.setHeader('Content-Type', contentType);
+        if (contentLength) res.setHeader('Content-Length', contentLength);
+        if (contentRange) res.setHeader('Content-Range', contentRange);
+        if (acceptRanges) res.setHeader('Accept-Ranges', acceptRanges);
 
-        if (contentLength) {
-            responseHeaders.set('Content-Length', contentLength);
-        }
-        if (contentRange) {
-            responseHeaders.set('Content-Range', contentRange);
-        }
-        if (acceptRanges) {
-            responseHeaders.set('Accept-Ranges', acceptRanges);
-        }
+        // Set status code
+        res.status(response.status);
 
-        // Return streaming response
-        return new Response(response.body, {
-            status: response.status,
-            headers: responseHeaders
-        });
+        // Stream the response body
+        const reader = response.body.getReader();
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                res.write(Buffer.from(value));
+            }
+            res.end();
+        } catch (streamError) {
+            console.error('Stream error:', streamError);
+            // Client might have disconnected, that's okay
+            res.end();
+        }
 
     } catch (error) {
         console.error('Stream proxy error:', error);
-        return new Response(`Proxy error: ${error.message}`, {
-            status: 500,
-            headers: {
-                'Content-Type': 'text/plain',
-                'Access-Control-Allow-Origin': '*'
-            }
+        return res.status(500).json({
+            error: 'Proxy error',
+            message: error.message
         });
     }
 }
+
+// Configure as streaming function
+export const config = {
+    api: {
+        responseLimit: false,
+        bodyParser: false,
+    },
+};
