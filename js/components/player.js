@@ -71,6 +71,24 @@ class VideoPlayer {
     }
 
     /**
+     * Check if we need to proxy the stream URL
+     */
+    needsStreamProxy(url) {
+        const isSecureContext = window.location.protocol === 'https:';
+        return isSecureContext && url && url.startsWith('http://');
+    }
+
+    /**
+     * Get proxied stream URL
+     */
+    getProxiedStreamUrl(url) {
+        if (this.needsStreamProxy(url)) {
+            return `/api/stream?url=${encodeURIComponent(url)}`;
+        }
+        return url;
+    }
+
+    /**
      * Play content
      */
     async play(item) {
@@ -98,11 +116,19 @@ class VideoPlayer {
             return;
         }
 
+        // Apply stream proxy if needed for HTTPS context
+        const originalUrl = streamUrl;
+        streamUrl = this.getProxiedStreamUrl(streamUrl);
+
+        if (originalUrl !== streamUrl) {
+            console.log('Using stream proxy for:', originalUrl);
+        }
+
         console.log('Playing:', streamUrl);
 
         try {
             // Check if it's an HLS stream
-            const isHLS = streamUrl.includes('.m3u8');
+            const isHLS = originalUrl.includes('.m3u8');
 
             if (isHLS && typeof Hls !== 'undefined' && Hls.isSupported()) {
                 // Use HLS.js for HLS streams
